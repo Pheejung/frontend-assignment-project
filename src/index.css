@@ -1,0 +1,168 @@
+:root {
+  color: #111827;
+  background: #f4f6fb;
+  font-family: 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+  line-height: 1.4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #dbe1eb;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.filter-card .filter-grid {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+}
+
+input {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #c2ccd8;
+  border-radius: 8px;
+}
+
+button {
+  border: 1px solid #c2ccd8;
+  border-radius: 8px;
+  height: 32px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+button.secondary {
+  width: 100px;
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.chip {
+  padding: 0 10px;
+}
+
+.chip.active {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
+}
+
+.chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric {
+  margin-top: 8px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.muted {
+  margin-top: 8px;
+  color: #5f6b7a;
+  font-size: 14px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th,
+td {
+  border-bottom: 1px solid #ecf0f5;
+  text-align: left;
+  font-size: 13px;
+  padding: 8px;
+}
+
+.status-message {
+  font-size: 15px;
+  color: #334155;
+}
+
+.status-message.error {
+  color: #b91c1c;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.chart-box {
+  width: 100%;
+  min-height: 320px;
+}
+
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell {
+    padding: 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  th,
+  td {
+    font-size: 12px;
+  }
+}
