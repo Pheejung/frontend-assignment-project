@@ -25,6 +25,7 @@ type SortKey = "period" | "totalCost" | "ctr" | "cpc" | "roas"
 type SortDirection = "asc" | "desc"
 
 const PAGE_SIZE = 10
+const SEARCH_DEBOUNCE_MS = 300
 
 const STATUS_LABEL: Record<CampaignStatus, string> = {
   active: "진행중",
@@ -59,12 +60,23 @@ export function CampaignManagementTable({
   rows,
   onBulkStatusChange,
 }: CampaignManagementTableProps) {
+  const [searchInput, setSearchInput] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [sortKey, setSortKey] = useState<SortKey>("period")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [bulkStatus, setBulkStatus] = useState<CampaignStatus>("active")
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setSearchTerm(searchInput)
+    }, SEARCH_DEBOUNCE_MS)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [searchInput])
 
   const searchedRows = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase()
@@ -178,8 +190,8 @@ export function CampaignManagementTable({
             <span>검색</span>
             <input
               type="search"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
               placeholder="캠페인명 검색"
               aria-label="캠페인명 검색"
             />
