@@ -7,6 +7,7 @@ export interface DailyStatApi {
   conversions: unknown
   cost: unknown
   conversionsValue: unknown
+  revenue?: unknown
 }
 
 export interface DailyStat {

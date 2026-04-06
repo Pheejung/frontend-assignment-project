@@ -9,7 +9,7 @@ import { toNonNegativeInteger, toNonNegativeNumber } from '../../../shared/lib/n
 function normalizeDailyStat(api: DailyStatApi): DailyStat | null {
   const campaignId =
     typeof api.campaignId === 'string' && api.campaignId.trim().length > 0
-      ? api.campaignId
+      ? api.campaignId.trim()
       : null
   if (campaignId === null) {
     return null
@@ -22,8 +22,10 @@ function normalizeDailyStat(api: DailyStatApi): DailyStat | null {
 
   const id =
     typeof api.id === 'string' && api.id.trim().length > 0
-      ? api.id
+      ? api.id.trim()
       : `${campaignId}:${date}`
+
+  const rawRevenue = api.conversionsValue ?? api.revenue
 
   return {
     id,
@@ -32,8 +34,8 @@ function normalizeDailyStat(api: DailyStatApi): DailyStat | null {
     impressions: toNonNegativeInteger(api.impressions),
     clicks: toNonNegativeInteger(api.clicks),
     conversions: toNonNegativeInteger(api.conversions),
-    cost: toNonNegativeInteger(api.cost),
-    conversionsValue: toNonNegativeNumber(api.conversionsValue),
+    cost: toNonNegativeNumber(api.cost),
+    conversionsValue: toNonNegativeNumber(rawRevenue),
   }
 }
 

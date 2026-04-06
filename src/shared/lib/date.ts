@@ -13,9 +13,14 @@ export function normalizeDateInput(value: unknown): string | null {
     return null
   }
 
+  const input = value.trim()
+  if (input.length === 0) {
+    return null
+  }
+
   const formats = ['YYYY-MM-DD', 'YYYY/MM/DD']
   for (const format of formats) {
-    const parsed = dayjs(value, format, true)
+    const parsed = dayjs(input, format, true)
     if (parsed.isValid()) {
       return parsed.format('YYYY-MM-DD')
     }

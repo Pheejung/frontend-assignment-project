@@ -25,12 +25,12 @@ const PLATFORM_MAP: Record<string, CampaignPlatform> = {
 }
 
 function normalizeStatus(value: unknown): CampaignStatus {
-  const key = typeof value === 'string' ? value.toLowerCase() : ''
+  const key = typeof value === 'string' ? value.trim().toLowerCase() : ''
   return STATUS_MAP[key] ?? 'paused'
 }
 
 function normalizePlatform(value: unknown): CampaignPlatform {
-  const key = typeof value === 'string' ? value.toLowerCase() : ''
+  const key = typeof value === 'string' ? value.trim().toLowerCase() : ''
   return PLATFORM_MAP[key] ?? 'Google'
 }
 
@@ -43,7 +43,7 @@ function normalizeName(name: unknown, id: string): string {
 }
 
 function normalizeCampaign(api: CampaignApi): Campaign | null {
-  const id = typeof api.id === 'string' && api.id.trim().length > 0 ? api.id : null
+  const id = typeof api.id === 'string' && api.id.trim().length > 0 ? api.id.trim() : null
   if (id === null) {
     return null
   }

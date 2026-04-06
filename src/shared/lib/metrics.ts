@@ -12,10 +12,18 @@ export interface DerivedMetrics {
   roas: number
 }
 
-export function calculateDerivedMetrics(input: MetricInput): DerivedMetrics {
-  const ctr = input.impressions > 0 ? (input.clicks / input.impressions) * 100 : 0
-  const cpc = input.clicks > 0 ? input.cost / input.clicks : 0
-  const roas = input.cost > 0 ? (input.conversionsValue / input.cost) * 100 : 0
+function roundToTwo(value: number): number {
+  return Math.round(value * 100) / 100
+}
 
-  return { ctr, cpc, roas }
+export function calculateDerivedMetrics(input: MetricInput): DerivedMetrics {
+  const ctrRaw = input.impressions > 0 ? (input.clicks / input.impressions) * 100 : 0
+  const cpcRaw = input.clicks > 0 ? input.cost / input.clicks : 0
+  const roasRaw = input.cost > 0 ? (input.conversionsValue / input.cost) * 100 : 0
+
+  return {
+    ctr: roundToTwo(ctrRaw),
+    cpc: roundToTwo(cpcRaw),
+    roas: roundToTwo(roasRaw),
+  }
 }
