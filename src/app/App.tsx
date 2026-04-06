@@ -1,25 +1,39 @@
-import { useMemo } from 'react'
-import { useCampaignsQuery } from '../entities/campaign/model/useCampaignsQuery'
-import type { CampaignPlatform, CampaignStatus } from '../entities/campaign/model/types'
-import { useDailyStatsQuery } from '../entities/daily-stat/model/useDailyStatsQuery'
-import { useDashboardStore } from '../features/global-filter/model/store'
+import { useMemo, useState } from "react"
+import { useCampaignsQuery } from "../entities/campaign/model/useCampaignsQuery"
+import type { Campaign, CampaignPlatform, CampaignStatus } from "../entities/campaign/model/types"
+import { useDailyStatsQuery } from "../entities/daily-stat/model/useDailyStatsQuery"
+import { CampaignCreateModal } from "../features/campaign-create/ui/CampaignCreateModal"
+import { CampaignManagementTable, type CampaignTableRowData } from "../features/campaign-table/ui/CampaignManagementTable"
+import { useDashboardStore } from "../features/global-filter/model/store"
 import {
-  aggregateByDate,
   aggregateByCampaignId,
+  aggregateByDate,
   aggregateTotals,
   createEmptyTotals,
-} from '../shared/lib/aggregate'
-import { filterCampaigns, filterDailyStats } from '../shared/lib/filter'
-import { calculateDerivedMetrics } from '../shared/lib/metrics'
-import { formatCurrency, formatNumber, formatPercent } from '../shared/lib/number'
-import { ErrorFallback } from '../shared/ui/ErrorFallback'
-import { Loading } from '../shared/ui/Loading'
-import { DailyTrendChart } from '../widgets/daily-trend-chart/ui/DailyTrendChart'
+} from "../shared/lib/aggregate"
+import { filterCampaigns, filterDailyStats } from "../shared/lib/filter"
+import { calculateDerivedMetrics } from "../shared/lib/metrics"
+import { formatCurrency, formatNumber, formatPercent } from "../shared/lib/number"
+import { ErrorFallback } from "../shared/ui/ErrorFallback"
+import { Loading } from "../shared/ui/Loading"
+import { DailyTrendChart } from "../widgets/daily-trend-chart/ui/DailyTrendChart"
 
-const statusOptions: CampaignStatus[] = ['active', 'paused', 'ended']
-const platformOptions: CampaignPlatform[] = ['Google', 'Meta', 'Naver']
+const statusOptions: CampaignStatus[] = ["active", "paused", "ended"]
+const platformOptions: CampaignPlatform[] = ["Google", "Meta", "Naver"]
+
+const STATUS_LABEL: Record<CampaignStatus, string> = {
+  active: "진행중",
+  paused: "일시중지",
+  ended: "종료",
+}
+
+function createLocalCampaignId(): string {
+  return `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
 
 export default function DashboardApp() {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+
   const campaignsQuery = useCampaignsQuery()
   const dailyStatsQuery = useDailyStatsQuery()
 
@@ -29,19 +43,34 @@ export default function DashboardApp() {
   const trendMetrics = useDashboardStore((state) => state.trendMetrics)
   const localCampaigns = useDashboardStore((state) => state.localCampaigns)
   const localDailyStats = useDashboardStore((state) => state.localDailyStats)
+  const statusOverrides = useDashboardStore((state) => state.statusOverrides)
+  const spendOverrides = useDashboardStore((state) => state.spendOverrides)
   const setDateRange = useDashboardStore((state) => state.setDateRange)
   const toggleStatus = useDashboardStore((state) => state.toggleStatus)
   const togglePlatform = useDashboardStore((state) => state.togglePlatform)
   const toggleTrendMetric = useDashboardStore((state) => state.toggleTrendMetric)
   const resetFilters = useDashboardStore((state) => state.resetFilters)
+  const addLocalCampaign = useDashboardStore((state) => state.addLocalCampaign)
+  const bulkUpdateCampaignStatus = useDashboardStore((state) => state.bulkUpdateCampaignStatus)
 
   const campaignsData = campaignsQuery.data
   const dailyStatsData = dailyStatsQuery.data
 
-  const mergedCampaigns = useMemo(
-    () => [...(campaignsData?.campaigns ?? []), ...localCampaigns],
-    [campaignsData?.campaigns, localCampaigns],
-  )
+  const mergedCampaigns = useMemo(() => {
+    const combined = [...(campaignsData?.campaigns ?? []), ...localCampaigns]
+
+    return combined.map((campaign) => {
+      const overriddenStatus = statusOverrides[campaign.id]
+      if (!overriddenStatus) {
+        return campaign
+      }
+
+      return {
+        ...campaign,
+        status: overriddenStatus,
+      }
+    })
+  }, [campaignsData?.campaigns, localCampaigns, statusOverrides])
 
   const mergedDailyStats = useMemo(
     () => [...(dailyStatsData?.dailyStats ?? []), ...localDailyStats],
@@ -68,26 +97,55 @@ export default function DashboardApp() {
   const dailySeries = useMemo(() => aggregateByDate(filteredStats), [filteredStats])
   const campaignTotals = useMemo(() => aggregateByCampaignId(filteredStats), [filteredStats])
 
-  const previewRows = useMemo(
-    () =>
-      filteredCampaigns.slice(0, 8).map((campaign) => {
-        const stat = campaignTotals.get(campaign.id) ?? createEmptyTotals()
-        return {
-          id: campaign.id,
-          name: campaign.name,
-          platform: campaign.platform,
-          status: campaign.status,
-          cost: stat.cost,
-          ...calculateDerivedMetrics(stat),
-        }
-      }),
-    [campaignTotals, filteredCampaigns],
-  )
+  const campaignTableRows = useMemo<CampaignTableRowData[]>(() => {
+    return filteredCampaigns.map((campaign) => {
+      const stat = campaignTotals.get(campaign.id)
+      const totalsForCampaign = stat ?? createEmptyTotals()
+      const metrics = calculateDerivedMetrics(totalsForCampaign)
+      const fallbackSpend = spendOverrides[campaign.id] ?? 0
+
+      return {
+        id: campaign.id,
+        name: campaign.name,
+        status: campaign.status,
+        platform: campaign.platform,
+        startDate: campaign.startDate,
+        endDate: campaign.endDate,
+        totalCost: stat ? stat.cost : fallbackSpend,
+        ctr: metrics.ctr,
+        cpc: metrics.cpc,
+        roas: metrics.roas,
+        hasStats: Boolean(stat),
+      }
+    })
+  }, [filteredCampaigns, campaignTotals, spendOverrides])
+
+  function handleCreateCampaign(payload: {
+    name: string
+    platform: CampaignPlatform
+    budget: number
+    initialSpend: number
+    startDate: string
+    endDate: string
+  }) {
+    const newCampaign: Campaign = {
+      id: createLocalCampaignId(),
+      name: payload.name,
+      platform: payload.platform,
+      status: "active",
+      budget: payload.budget,
+      startDate: payload.startDate,
+      endDate: payload.endDate,
+    }
+
+    addLocalCampaign(newCampaign, payload.initialSpend)
+    setIsCreateModalOpen(false)
+  }
 
   if (campaignsQuery.isLoading || dailyStatsQuery.isLoading) {
     return (
       <main className="app-shell">
-        <h1>Campaign Dashboard - Day1 Foundation</h1>
+        <h1>마케팅 캠페인 대시보드</h1>
         <Loading />
       </main>
     )
@@ -99,11 +157,11 @@ export default function DashboardApp() {
         ? campaignsQuery.error.message
         : dailyStatsQuery.error instanceof Error
           ? dailyStatsQuery.error.message
-          : 'Failed to load data.'
+          : "Failed to load data."
 
     return (
       <main className="app-shell">
-        <h1>Campaign Dashboard - Day1 Foundation</h1>
+        <h1>마케팅 캠페인 대시보드</h1>
         <ErrorFallback message={message} />
       </main>
     )
@@ -112,7 +170,7 @@ export default function DashboardApp() {
   if (!campaignsData || !dailyStatsData) {
     return (
       <main className="app-shell">
-        <h1>Campaign Dashboard - Day1 Foundation</h1>
+        <h1>마케팅 캠페인 대시보드</h1>
         <ErrorFallback message="No data returned from API." />
       </main>
     )
@@ -120,18 +178,21 @@ export default function DashboardApp() {
 
   return (
     <main className="app-shell">
-      <header>
-        <h1>Campaign Dashboard - Day1 Foundation</h1>
-        <p className="muted">
-          Async API + normalization + global filter pipeline are connected.
-        </p>
+      <header className="page-header">
+        <div>
+          <h1>마케팅 캠페인 대시보드</h1>
+          <p className="muted">필터 변경 시 차트와 테이블이 동일한 데이터 파이프라인으로 동기화됩니다.</p>
+        </div>
+        <button type="button" className="primary" onClick={() => setIsCreateModalOpen(true)}>
+          캠페인 등록
+        </button>
       </header>
 
       <section className="card filter-card">
-        <h2>Global Filter (Store)</h2>
+        <h2>글로벌 필터</h2>
         <div className="filter-grid">
           <label>
-            <span>From</span>
+            <span>시작일</span>
             <input
               type="date"
               value={dateRange.from}
@@ -145,7 +206,7 @@ export default function DashboardApp() {
           </label>
 
           <label>
-            <span>To</span>
+            <span>종료일</span>
             <input
               type="date"
               value={dateRange.to}
@@ -159,29 +220,29 @@ export default function DashboardApp() {
           </label>
 
           <div>
-            <span>Status</span>
+            <span>상태</span>
             <div className="chip-group">
               {statusOptions.map((status) => (
                 <button
                   key={status}
                   type="button"
-                  className={statuses.includes(status) ? 'chip active' : 'chip'}
+                  className={statuses.includes(status) ? "chip active" : "chip"}
                   onClick={() => toggleStatus(status)}
                 >
-                  {status}
+                  {STATUS_LABEL[status]}
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <span>Platform</span>
+            <span>매체</span>
             <div className="chip-group">
               {platformOptions.map((platform) => (
                 <button
                   key={platform}
                   type="button"
-                  className={platforms.includes(platform) ? 'chip active' : 'chip'}
+                  className={platforms.includes(platform) ? "chip active" : "chip"}
                   onClick={() => togglePlatform(platform)}
                 >
                   {platform}
@@ -191,14 +252,14 @@ export default function DashboardApp() {
           </div>
 
           <button type="button" className="secondary" onClick={resetFilters}>
-            Reset
+            초기화
           </button>
         </div>
       </section>
 
       <section className="stats-grid">
         <article className="card">
-          <h3>Campaigns</h3>
+          <h3>캠페인 수</h3>
           <p className="metric">{formatNumber(filteredCampaigns.length)}</p>
           <p className="muted">
             raw {formatNumber(campaignsData.rawCount)} / dropped {formatNumber(campaignsData.droppedCount)}
@@ -206,24 +267,24 @@ export default function DashboardApp() {
         </article>
 
         <article className="card">
-          <h3>Daily Stats Rows</h3>
+          <h3>일별 성과 행</h3>
           <p className="metric">{formatNumber(filteredStats.length)}</p>
           <p className="muted">
-            raw {formatNumber(dailyStatsData.rawCount)} / dropped {formatNumber(dailyStatsData.droppedCount)} /
-            merged {formatNumber(dailyStatsData.mergedCount)}
+            raw {formatNumber(dailyStatsData.rawCount)} / dropped {formatNumber(dailyStatsData.droppedCount)} / merged {" "}
+            {formatNumber(dailyStatsData.mergedCount)}
           </p>
         </article>
 
         <article className="card">
-          <h3>Total Cost</h3>
+          <h3>총 집행금액</h3>
           <p className="metric">{formatCurrency(totals.cost)}</p>
-          <p className="muted">Filtered period spend</p>
+          <p className="muted">필터 기간 기준 합계</p>
         </article>
 
         <article className="card">
-          <h3>Derived Metrics</h3>
+          <h3>파생 지표</h3>
           <p className="muted">
-            CTR {formatPercent(derivedMetrics.ctr)} / CPC {formatCurrency(derivedMetrics.cpc)} / ROAS{' '}
+            CTR {formatPercent(derivedMetrics.ctr)} / CPC {formatCurrency(derivedMetrics.cpc)} / ROAS {" "}
             {formatPercent(derivedMetrics.roas)}
           </p>
         </article>
@@ -235,38 +296,16 @@ export default function DashboardApp() {
         onToggleMetric={toggleTrendMetric}
       />
 
-      <section className="card">
-        <h2>Campaign Preview (Top 8)</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Status</th>
-              <th>Platform</th>
-              <th>Cost</th>
-              <th>CTR</th>
-              <th>CPC</th>
-              <th>ROAS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {previewRows.map((row) => (
-              <tr key={row.id}>
-                <td>{row.id}</td>
-                <td>{row.name}</td>
-                <td>{row.status}</td>
-                <td>{row.platform}</td>
-                <td>{formatCurrency(row.cost)}</td>
-                <td>{formatPercent(row.ctr)}</td>
-                <td>{formatCurrency(row.cpc)}</td>
-                <td>{formatPercent(row.roas)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      <CampaignManagementTable
+        rows={campaignTableRows}
+        onBulkStatusChange={bulkUpdateCampaignStatus}
+      />
 
+      <CampaignCreateModal
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateCampaign}
+      />
     </main>
   )
 }
