@@ -6,8 +6,8 @@
 
 핵심 목표:
 - 확장 가능한 컴포넌트 설계
-- 불완전 데이터 안전 처리(0 분모, null, 포맷 불일치)
-- 필터 단일 소스 기반의 일관된 파생 계산
+- 예외 데이터(0 분모, null, 포맷 불일치) 안전 처리
+- 글로벌 필터 기준의 일관된 파생 지표 계산
 
 ## 2. 문서 구성
 - 원문 보관: [ORIGINAL.md](./ORIGINAL.md)  
@@ -39,88 +39,124 @@ npm run server   # API: http://127.0.0.1:4000
 npm run dev      # FE: http://localhost:5173
 ```
 
-### 3.4 주요 API
+### 3.4 검증 명령
+```bash
+npm run lint
+npm run build
+```
+
+### 3.5 주요 API
 - `GET /campaigns`
 - `GET /daily_stats`
 
 ## 4. 기술 스택 선택 근거
-| 구분 | 선택 | 이유 | 트레이드오프 |
+| 구분 | 선택 | 선택 이유 | 트레이드오프 |
 | --- | --- | --- | --- |
-| Framework | React + TypeScript + Vite | 빠른 개발 속도, 타입 안정성 | Next.js 대비 SSR/라우팅 내장 기능 없음 |
-| 서버 상태 | TanStack Query | 비동기 데이터/로딩/에러/캐시 표준화 | 초기 학습 비용 |
-| 전역 UI 상태 | Zustand | 필터/모달/로컬 병합 상태를 간결하게 관리 | 구조 규칙 없으면 난잡해질 수 있음 |
-| 폼/검증 | react-hook-form + zod | 선언형 검증, 성능, 에러 메시지 매핑 용이 | 스키마 작성 비용 |
-| 차트 | Recharts | 범례/툴팁/반응형 구현이 쉬움 | 고난도 커스텀 한계 |
-| Mock API | json-server | import 없이 API 통신 요건 충족 | 실제 백엔드 제약은 미반영 |
+| Framework | React + TypeScript + Vite | 컴포넌트 조합과 빠른 개발/빌드, 타입 안정성 확보 | SSR/파일 라우팅은 직접 구성 필요 |
+| 서버 상태 | TanStack Query | 비동기 요청, 로딩/에러/캐시 흐름 표준화 | 초기 러닝커브 |
+| 전역 상태 | Zustand | 글로벌 필터/로컬 등록/상태 override를 간결하게 관리 | 규칙 없이 커지면 난잡해질 수 있음 |
+| 차트 | Recharts | 라인/도넛/바 차트를 빠르게 구성, 툴팁/반응형 지원 | 고급 커스텀 한계 |
+| 날짜 처리 | dayjs | 월 시작/끝 계산, 날짜 포맷 정규화 단순화 | 의존성 추가 |
+| Mock API | json-server | import 금지 + 비동기 통신 필수 요구사항 충족 | 실제 백엔드 제약과 차이 |
 
-## 5. 폴더 구조 및 아키텍처
+## 5. 폴더 구조
 ```txt
-src/
-  app/
-    App.tsx
-    providers/QueryProvider.tsx
-  entities/
-    campaign/
-      model/types.ts
-      model/useCampaignsQuery.ts
-      lib/normalize.ts
-    daily-stat/
-      model/types.ts
-      model/useDailyStatsQuery.ts
-      lib/normalize.ts
-  features/
-    global-filter/model/store.ts
-  shared/
-    api/
-      client.ts
-      campaigns.ts
-      dailyStats.ts
-      queryKeys.ts
-    lib/
-      date.ts
-      number.ts
-      filter.ts
-      aggregate.ts
-      metrics.ts
-    ui/
-      Loading.tsx
-      ErrorFallback.tsx
+frontend-assignment-project/
+├─ db.json
+├─ ORIGINAL.md
+├─ DESIGN.md
+├─ ASSIGNMENT_PLAN.md
+├─ DATA_SANITIZATION_PLAN.md
+├─ AI_USAGE.md
+├─ README.md
+├─ package.json
+├─ tsconfig.json
+├─ vite.config.ts
+└─ src/
+   ├─ main.tsx
+   ├─ index.css
+   ├─ app/
+   │  ├─ App.tsx
+   │  └─ providers/QueryProvider.tsx
+   ├─ entities/
+   │  ├─ campaign/
+   │  │  ├─ model/types.ts
+   │  │  ├─ model/useCampaignsQuery.ts
+   │  │  └─ lib/normalize.ts
+   │  └─ daily-stat/
+   │     ├─ model/types.ts
+   │     ├─ model/useDailyStatsQuery.ts
+   │     └─ lib/normalize.ts
+   ├─ features/
+   │  ├─ global-filter/model/store.ts
+   │  ├─ campaign-table/ui/CampaignManagementTable.tsx
+   │  └─ campaign-create/ui/CampaignCreateModal.tsx
+   ├─ widgets/
+   │  ├─ daily-trend-chart/ui/DailyTrendChart.tsx
+   │  ├─ platform-performance-donut/ui/PlatformPerformanceDonut.tsx
+   │  └─ top-campaign-ranking/ui/TopCampaignRankingChart.tsx
+   └─ shared/
+      ├─ api/
+      ├─ lib/
+      └─ ui/
 ```
 
-분리 원칙:
-- `entities`: 도메인 타입/정규화/쿼리
-- `features`: 사용자 인터랙션 상태
-- `shared`: API/순수 계산 유틸/공용 UI
-- `app`: 앱 조립 및 Provider
+구조 원칙:
+- `entities`: 도메인 모델, 정규화, API query
+- `features`: 사용자 액션 중심 기능 UI/상태
+- `widgets`: 대시보드 조합 단위 시각화 컴포넌트
+- `shared`: 공통 API client, 유틸, 공용 UI
+- `app`: 최상위 화면 조립 및 Provider 연결
 
-## 6. 컴포넌트/데이터 설계 요약
-- 데이터 흐름:
-  1. API fetch
-  2. normalize
-  3. 로컬 데이터 병합
-  4. 글로벌 필터 적용
-  5. 집계/파생지표 계산
-  6. 차트/테이블 렌더
-- 파생 지표 계산:
-  - CTR = `clicks / impressions * 100` (impressions=0이면 0)
-  - CPC = `cost / clicks` (clicks=0이면 0)
-  - ROAS = `conversionsValue / cost * 100` (cost=0이면 0)
+## 6. 컴포넌트 설계 및 데이터 흐름
+데이터 파이프라인:
+1. API fetch (`campaigns`, `daily_stats`)
+2. normalize (타입/포맷 보정)
+3. 로컬 데이터 병합 (신규 캠페인, 상태 변경 override)
+4. 글로벌 필터 적용 (기간/상태/매체, AND)
+5. 집계/파생 지표 계산
+6. 차트/테이블/랭킹에 동일 결과셋 전달
 
-## 7. 현재 구현 상태
-- [x] Day1 기반 구축 완료 (API, normalize, 필터 스토어, 집계 파이프라인)
-- [x] 3.1 글로벌 필터 완성
-- [x] 3.2 일별 추이 차트 완성
-- [ ] 3.3 캠페인 관리 테이블 완성
-- [ ] 3.4 캠페인 등록 모달 완성
-- [ ] 선택 과제(도넛/Top3)
+파생 지표:
+- `CTR = clicks / impressions * 100` (impressions=0 -> 0)
+- `CPC = cost / clicks` (clicks=0 -> 0)
+- `ROAS = conversionsValue / cost * 100` (cost=0 -> 0)
 
-## 8. 제출 체크 포인트
+예외 처리:
+- `conversionsValue: null` -> 0
+- 비정상 숫자/문자열 -> 안전한 숫자 변환
+- 잘못된 날짜 포맷 -> 정규화 또는 제외
+- `NaN`, `Infinity`가 UI에 노출되지 않도록 방어
+
+## 7. 구현 범위
+### 7.1 필수 요구사항
+- [x] 3.1 글로벌 필터
+- [x] 3.2 일별 추이 차트
+- [x] 3.3 캠페인 관리 테이블
+- [x] 3.4 캠페인 등록 모달
+
+### 7.2 선택 요구사항
+- [x] 4.1 플랫폼별 성과 도넛
+- [x] 4.2 캠페인 랭킹 Top3
+
+## 8. 요구사항 매핑 포인트
+- 필터 변경 시 차트/테이블 동기화: 동일 `filteredCampaigns`, `filteredStats` 기반
+- 테이블 검색은 테이블에만 적용: 검색 상태를 테이블 컴포넌트 내부로 분리
+- 일괄 상태 변경: 체크박스 선택 + 드롭다운 적용 후 override 즉시 반영
+- 등록 모달 검증:
+  - 캠페인명 2~100자
+  - 예산 100~10억 정수
+  - 집행금액 0~10억 정수 및 예산 초과 불가
+  - 종료일 > 시작일
+  - 상태 active 고정, ID 자동 생성
+  
+## 9. 제출 체크 포인트
 - `db.json` 원본 무수정
 - import 방식 대신 API 비동기 통신
 - `README.md`, `AI_USAGE.md` 필수 항목 포함
 
-## 9. 요구사항 분류
-### 9.1 기능 요구사항
+## 10. 요구사항 분류
+### 10.1 기능 요구사항
 - 글로벌 필터
   - 기간/상태/매체 필터를 AND 조건으로 적용
   - 초기값: 당월 1일~말일, 상태/매체 전체
@@ -138,7 +174,7 @@ src/
   - 플랫폼 도넛(메트릭 토글, 필터 양방향 연동)
   - Top3 랭킹(ROAS/CTR/CPC 토글 및 정렬 규칙)
 
-### 9.2 비기능 요구사항
+### 10.2 비기능 요구사항
 - 데이터 무결성
   - `db.json` 원본 무수정
   - import 금지, API 비동기 통신 방식 사용

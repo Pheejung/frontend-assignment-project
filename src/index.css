@@ -146,6 +146,107 @@ button.ghost {
   min-height: 320px;
 }
 
+.optional-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.optional-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.donut-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.donut-box {
+  min-height: 280px;
+}
+
+.platform-summary {
+  display: grid;
+  gap: 8px;
+}
+
+.summary-total {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.platform-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.platform-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #334155;
+}
+
+.platform-item.active {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.platform-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+}
+
+.platform-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.ranking-box {
+  min-height: 260px;
+}
+
+.ranking-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  gap: 6px;
+}
+
+.ranking-list li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
 .table-header {
   display: flex;
   align-items: flex-start;
@@ -269,6 +370,10 @@ td {
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .optional-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 760px) {
@@ -287,6 +392,15 @@ td {
   .chart-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .optional-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .donut-layout {
+    grid-template-columns: 1fr;
   }
 
   .table-toolbar {

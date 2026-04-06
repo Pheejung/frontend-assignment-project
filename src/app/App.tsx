@@ -17,6 +17,11 @@ import { formatCurrency, formatNumber, formatPercent } from "../shared/lib/numbe
 import { ErrorFallback } from "../shared/ui/ErrorFallback"
 import { Loading } from "../shared/ui/Loading"
 import { DailyTrendChart } from "../widgets/daily-trend-chart/ui/DailyTrendChart"
+import {
+  PlatformPerformanceDonut,
+  type PlatformPerformanceDatum,
+} from "../widgets/platform-performance-donut/ui/PlatformPerformanceDonut"
+import { TopCampaignRankingChart } from "../widgets/top-campaign-ranking/ui/TopCampaignRankingChart"
 
 const statusOptions: CampaignStatus[] = ["active", "paused", "ended"]
 const platformOptions: CampaignPlatform[] = ["Google", "Meta", "Naver"]
@@ -97,6 +102,26 @@ export default function DashboardApp() {
   const dailySeries = useMemo(() => aggregateByDate(filteredStats), [filteredStats])
   const campaignTotals = useMemo(() => aggregateByCampaignId(filteredStats), [filteredStats])
 
+  const campaignsForDonut = useMemo(
+    () =>
+      filterCampaigns(mergedCampaigns, {
+        dateRange,
+        statuses,
+        platforms: platformOptions,
+      }),
+    [mergedCampaigns, dateRange, statuses],
+  )
+
+  const campaignIdsForDonut = useMemo(
+    () => new Set(campaignsForDonut.map((campaign) => campaign.id)),
+    [campaignsForDonut],
+  )
+
+  const statsForDonut = useMemo(
+    () => filterDailyStats(mergedDailyStats, campaignIdsForDonut, dateRange),
+    [mergedDailyStats, campaignIdsForDonut, dateRange],
+  )
+
   const campaignTableRows = useMemo<CampaignTableRowData[]>(() => {
     return filteredCampaigns.map((campaign) => {
       const stat = campaignTotals.get(campaign.id)
@@ -119,6 +144,34 @@ export default function DashboardApp() {
       }
     })
   }, [filteredCampaigns, campaignTotals, spendOverrides])
+
+  const platformPerformanceData = useMemo<PlatformPerformanceDatum[]>(() => {
+    const campaignPlatformMap = new Map(campaignsForDonut.map((campaign) => [campaign.id, campaign.platform]))
+
+    const buckets: Record<CampaignPlatform, Omit<PlatformPerformanceDatum, "platform">> = {
+      Google: { cost: 0, impressions: 0, clicks: 0, conversions: 0 },
+      Meta: { cost: 0, impressions: 0, clicks: 0, conversions: 0 },
+      Naver: { cost: 0, impressions: 0, clicks: 0, conversions: 0 },
+    }
+
+    for (const stat of statsForDonut) {
+      const platform = campaignPlatformMap.get(stat.campaignId)
+      if (!platform) {
+        continue
+      }
+
+      const target = buckets[platform]
+      target.cost += stat.cost
+      target.impressions += stat.impressions
+      target.clicks += stat.clicks
+      target.conversions += stat.conversions
+    }
+
+    return platformOptions.map((platform) => ({
+      platform,
+      ...buckets[platform],
+    }))
+  }, [campaignsForDonut, statsForDonut])
 
   function handleCreateCampaign(payload: {
     name: string
@@ -270,7 +323,7 @@ export default function DashboardApp() {
           <h3>일별 성과 행</h3>
           <p className="metric">{formatNumber(filteredStats.length)}</p>
           <p className="muted">
-            raw {formatNumber(dailyStatsData.rawCount)} / dropped {formatNumber(dailyStatsData.droppedCount)} / merged {" "}
+            raw {formatNumber(dailyStatsData.rawCount)} / dropped {formatNumber(dailyStatsData.droppedCount)} / merged{" "}
             {formatNumber(dailyStatsData.mergedCount)}
           </p>
         </article>
@@ -284,7 +337,7 @@ export default function DashboardApp() {
         <article className="card">
           <h3>파생 지표</h3>
           <p className="muted">
-            CTR {formatPercent(derivedMetrics.ctr)} / CPC {formatCurrency(derivedMetrics.cpc)} / ROAS {" "}
+            CTR {formatPercent(derivedMetrics.ctr)} / CPC {formatCurrency(derivedMetrics.cpc)} / ROAS{" "}
             {formatPercent(derivedMetrics.roas)}
           </p>
         </article>
@@ -295,6 +348,15 @@ export default function DashboardApp() {
         selectedMetrics={trendMetrics}
         onToggleMetric={toggleTrendMetric}
       />
+
+      <section className="optional-grid">
+        <PlatformPerformanceDonut
+          data={platformPerformanceData}
+          selectedPlatforms={platforms}
+          onTogglePlatform={togglePlatform}
+        />
+        <TopCampaignRankingChart rows={campaignTableRows} />
+      </section>
 
       <CampaignManagementTable
         rows={campaignTableRows}
