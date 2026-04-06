@@ -242,39 +242,42 @@ export default function DashboardApp() {
       </header>
 
       <section className="card filter-card">
-        <h2>글로벌 필터</h2>
-        <div className="filter-grid">
-          <label>
-            <span>시작일</span>
-            <input
-              type="date"
-              value={dateRange.from}
-              onChange={(event) =>
-                setDateRange({
-                  from: event.target.value,
-                  to: dateRange.to,
-                })
-              }
-            />
-          </label>
+        <h2 className="sr-only">글로벌 필터</h2>
+        <div className="filter-toolbar">
+          <div className="filter-group period-group">
+            <span className="group-label">집행기간</span>
+            <label className="date-pill">
+              <input
+                type="date"
+                value={dateRange.from}
+                onChange={(event) =>
+                  setDateRange({
+                    from: event.target.value,
+                    to: dateRange.to,
+                  })
+                }
+              />
+            </label>
+            <span className="range-separator">~</span>
+            <label className="date-pill">
+              <input
+                type="date"
+                value={dateRange.to}
+                onChange={(event) =>
+                  setDateRange({
+                    from: dateRange.from,
+                    to: event.target.value,
+                  })
+                }
+              />
+            </label>
+          </div>
 
-          <label>
-            <span>종료일</span>
-            <input
-              type="date"
-              value={dateRange.to}
-              onChange={(event) =>
-                setDateRange({
-                  from: dateRange.from,
-                  to: event.target.value,
-                })
-              }
-            />
-          </label>
+          <span className="toolbar-divider" aria-hidden="true" />
 
-          <div>
-            <span>상태</span>
-            <div className="chip-group">
+          <div className="filter-group">
+            <span className="group-label">상태</span>
+            <div className="chip-group compact">
               {statusOptions.map((status) => (
                 <button
                   key={status}
@@ -288,9 +291,11 @@ export default function DashboardApp() {
             </div>
           </div>
 
-          <div>
-            <span>매체</span>
-            <div className="chip-group">
+          <span className="toolbar-divider" aria-hidden="true" />
+
+          <div className="filter-group">
+            <span className="group-label">매체</span>
+            <div className="chip-group compact">
               {platformOptions.map((platform) => (
                 <button
                   key={platform}
@@ -304,7 +309,9 @@ export default function DashboardApp() {
             </div>
           </div>
 
-          <button type="button" className="secondary" onClick={resetFilters}>
+          <span className="toolbar-divider" aria-hidden="true" />
+
+          <button type="button" className="secondary reset-inline" onClick={resetFilters}>
             초기화
           </button>
         </div>
