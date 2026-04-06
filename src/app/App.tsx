@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useCampaignsQuery } from "../entities/campaign/model/useCampaignsQuery"
 import type { Campaign, CampaignPlatform, CampaignStatus } from "../entities/campaign/model/types"
 import { useDailyStatsQuery } from "../entities/daily-stat/model/useDailyStatsQuery"
@@ -38,6 +38,8 @@ function createLocalCampaignId(): string {
 
 export default function DashboardApp() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [filterNotice, setFilterNotice] = useState<string | null>(null)
+  const filterNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const campaignsQuery = useCampaignsQuery()
   const dailyStatsQuery = useDailyStatsQuery()
@@ -57,6 +59,26 @@ export default function DashboardApp() {
   const resetFilters = useDashboardStore((state) => state.resetFilters)
   const addLocalCampaign = useDashboardStore((state) => state.addLocalCampaign)
   const bulkUpdateCampaignStatus = useDashboardStore((state) => state.bulkUpdateCampaignStatus)
+
+  const showFilterNotice = (message: string) => {
+    setFilterNotice(message)
+
+    if (filterNoticeTimerRef.current) {
+      clearTimeout(filterNoticeTimerRef.current)
+    }
+
+    filterNoticeTimerRef.current = setTimeout(() => {
+      setFilterNotice(null)
+    }, 1800)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (filterNoticeTimerRef.current) {
+        clearTimeout(filterNoticeTimerRef.current)
+      }
+    }
+  }, [])
 
   const campaignsData = campaignsQuery.data
   const dailyStatsData = dailyStatsQuery.data
@@ -283,7 +305,14 @@ export default function DashboardApp() {
                   key={status}
                   type="button"
                   className={statuses.includes(status) ? "chip active" : "chip"}
-                  onClick={() => toggleStatus(status)}
+                  onClick={() => {
+                    if (statuses.includes(status) && statuses.length === 1) {
+                      showFilterNotice("상태는 최소 1개 이상 선택해야 합니다.")
+                      return
+                    }
+
+                    toggleStatus(status)
+                  }}
                 >
                   {STATUS_LABEL[status]}
                 </button>
@@ -301,7 +330,14 @@ export default function DashboardApp() {
                   key={platform}
                   type="button"
                   className={platforms.includes(platform) ? "chip active" : "chip"}
-                  onClick={() => togglePlatform(platform)}
+                  onClick={() => {
+                    if (platforms.includes(platform) && platforms.length === 1) {
+                      showFilterNotice("매체는 최소 1개 이상 선택해야 합니다.")
+                      return
+                    }
+
+                    togglePlatform(platform)
+                  }}
                 >
                   {platform}
                 </button>
@@ -316,6 +352,12 @@ export default function DashboardApp() {
           </button>
         </div>
       </section>
+
+      {filterNotice ? (
+        <div className="toast-message" role="status" aria-live="polite">
+          {filterNotice}
+        </div>
+      ) : null}
 
       <section className="stats-grid">
         <article className="card">

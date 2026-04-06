@@ -27,10 +27,16 @@ interface DashboardStoreState {
   bulkUpdateCampaignStatus: (campaignIds: string[], status: CampaignStatus) => void
 }
 
-function toggleSelection<T extends string>(items: T[], value: T): T[] {
-  return items.includes(value)
-    ? items.filter((item) => item !== value)
-    : [...items, value]
+function toggleSelectionKeepAtLeastOne<T extends string>(items: T[], value: T): T[] {
+  if (items.includes(value)) {
+    if (items.length === 1) {
+      return items
+    }
+
+    return items.filter((item) => item !== value)
+  }
+
+  return [...items, value]
 }
 
 export const useDashboardStore = create<DashboardStoreState>((set) => ({
@@ -47,12 +53,12 @@ export const useDashboardStore = create<DashboardStoreState>((set) => ({
 
   toggleStatus: (status) =>
     set((state) => ({
-      statuses: toggleSelection(state.statuses, status),
+      statuses: toggleSelectionKeepAtLeastOne(state.statuses, status),
     })),
 
   togglePlatform: (platform) =>
     set((state) => ({
-      platforms: toggleSelection(state.platforms, platform),
+      platforms: toggleSelectionKeepAtLeastOne(state.platforms, platform),
     })),
 
   toggleTrendMetric: (metric) =>

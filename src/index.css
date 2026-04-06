@@ -541,6 +541,21 @@ tbody tr:nth-child(even) {
   color: var(--danger);
 }
 
+.toast-message {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1200;
+  padding: 10px 14px;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.24);
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -667,6 +682,12 @@ tbody tr:nth-child(even) {
 
   .toolbar-divider {
     display: none;
+  }
+
+  .toast-message {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
   }
 
   .stats-grid {
