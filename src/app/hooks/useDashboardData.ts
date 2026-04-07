@@ -2,7 +2,7 @@ import { useMemo } from "react"
 import { useCampaignsQuery } from "../../entities/campaign/model/useCampaignsQuery"
 import { useDailyStatsQuery } from "../../entities/daily-stat/model/useDailyStatsQuery"
 import type { CampaignPlatform, CampaignStatus } from "../../entities/campaign/model/types"
-import type { CampaignTableRowData } from "../../features/campaign-table/ui/CampaignManagementTable"
+import type { CampaignTableRowData } from "../../features/campaign-table/model/types"
 import { useDashboardStore } from "../../features/global-filter/model/store"
 import {
   aggregateByCampaignId,
@@ -32,7 +32,6 @@ export function useDashboardData(filters: FilterParams) {
   const dailyStatsQuery = useDailyStatsQuery()
 
   const localCampaigns = useDashboardStore((state) => state.localCampaigns)
-  const localDailyStats = useDashboardStore((state) => state.localDailyStats)
   const statusOverrides = useDashboardStore((state) => state.statusOverrides)
   const spendOverrides = useDashboardStore((state) => state.spendOverrides)
 
@@ -46,10 +45,7 @@ export function useDashboardData(filters: FilterParams) {
     })
   }, [campaignsQuery.data?.campaigns, localCampaigns, statusOverrides])
 
-  const mergedDailyStats = useMemo(
-    () => [...(dailyStatsQuery.data?.dailyStats ?? []), ...localDailyStats],
-    [dailyStatsQuery.data?.dailyStats, localDailyStats],
-  )
+  const mergedDailyStats = useMemo(() => dailyStatsQuery.data?.dailyStats ?? [], [dailyStatsQuery.data?.dailyStats])
 
   const filteredCampaigns = useMemo(
     () => filterCampaigns(mergedCampaigns, { dateRange, statuses, platforms }),

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import type { CampaignTableRowData } from "../../../features/campaign-table/ui/CampaignManagementTable"
+import type { CampaignTableRowData } from "../../../features/campaign-table/model/types"
 import { formatCurrency, formatPercent } from "../../../shared/lib/number"
 
 type RankingMetric = "roas" | "ctr" | "cpc"

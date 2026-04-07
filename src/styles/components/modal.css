@@ -1,0 +1,112 @@
+/* Campaign Create Modal */
+.modal-overlay {
+  background: rgba(6, 10, 18, 0.72);
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.modal {
+  width: min(640px, 100%);
+  background: #101726;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  padding: 22px;
+  gap: 18px;
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.52);
+}
+
+.modal-header {
+  align-items: flex-start;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-subtitle {
+  margin-top: 4px;
+  color: var(--ink-subtle);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.modal-form {
+  gap: 14px;
+}
+
+.modal .field-block {
+  display: grid;
+  gap: 6px;
+}
+
+.modal .field-block > span {
+  color: #a9b9cf;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.modal .field-row.two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.modal .field-block input,
+.modal .field-block select {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+}
+
+.modal .field-block input:focus,
+.modal .field-block select:focus {
+  border-color: rgba(129, 140, 248, 0.7);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22);
+}
+
+.modal-note {
+  margin: 2px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(126, 165, 222, 0.28);
+  border-radius: 10px;
+  background: rgba(126, 165, 222, 0.1);
+  color: #b8c8df;
+  font-size: 12px;
+}
+
+.modal-actions {
+  margin-top: 2px;
+}
+
+.modal-close {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+@media (max-width: 760px) {
+  .modal {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .modal .field-row.two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions {
+    width: 100%;
+  }
+
+  .modal-actions button {
+    min-width: 88px;
+  }
+}

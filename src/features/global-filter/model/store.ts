@@ -1,10 +1,10 @@
 import { create } from "zustand"
 import type { Campaign, CampaignPlatform, CampaignStatus } from "../../../entities/campaign/model/types"
-import type { DailyStat } from "../../../entities/daily-stat/model/types"
 import { getCurrentMonthRange, type DateRange } from "../../../shared/lib/date"
 
 const ALL_STATUSES: CampaignStatus[] = ["active", "paused", "ended"]
 const ALL_PLATFORMS: CampaignPlatform[] = ["Google", "Meta", "Naver"]
+
 export type TrendMetric = "impressions" | "clicks"
 const DEFAULT_TREND_METRICS: TrendMetric[] = ["impressions", "clicks"]
 
@@ -14,7 +14,6 @@ interface DashboardStoreState {
   platforms: CampaignPlatform[]
   trendMetrics: TrendMetric[]
   localCampaigns: Campaign[]
-  localDailyStats: DailyStat[]
   statusOverrides: Record<string, CampaignStatus>
   spendOverrides: Record<string, number>
   setDateRange: (next: DateRange) => void
@@ -34,14 +33,12 @@ function toggleSelectionKeepAtLeastOne<T extends string>(items: T[], value: T): 
   return [...items, value]
 }
 
-
 export const useDashboardStore = create<DashboardStoreState>((set) => ({
   dateRange: getCurrentMonthRange(),
   statuses: [...ALL_STATUSES],
   platforms: [...ALL_PLATFORMS],
   trendMetrics: [...DEFAULT_TREND_METRICS],
   localCampaigns: [],
-  localDailyStats: [],
   statusOverrides: {},
   spendOverrides: {},
 
@@ -83,10 +80,7 @@ export const useDashboardStore = create<DashboardStoreState>((set) => ({
 
   addLocalCampaign: (campaign, initialSpend) =>
     set((state) => {
-      const hasSpend =
-        typeof initialSpend === "number" &&
-        Number.isFinite(initialSpend) &&
-        initialSpend >= 0
+      const hasSpend = typeof initialSpend === "number" && Number.isFinite(initialSpend) && initialSpend >= 0
 
       return {
         localCampaigns: [...state.localCampaigns, campaign],

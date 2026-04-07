@@ -1,0 +1,35 @@
+/* Platform Donut Accessibility/Highlight Overrides */
+.platform-card button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.platform-card button:focus,
+.platform-card button:focus-visible,
+.platform-card .chip:focus,
+.platform-card .chip:focus-visible,
+.platform-card .platform-toggle:focus,
+.platform-card .platform-toggle:focus-visible,
+.platform-card .recharts-wrapper:focus,
+.platform-card .recharts-wrapper:focus-visible,
+.platform-card .recharts-surface:focus,
+.platform-card .recharts-surface:focus-visible,
+.platform-card .recharts-layer:focus,
+.platform-card .recharts-layer:focus-visible,
+.platform-card .recharts-sector:focus,
+.platform-card .recharts-sector:focus-visible,
+.platform-card .recharts-pie-sector:focus,
+.platform-card .recharts-pie-sector:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+.platform-card .platform-item,
+.platform-card .platform-item.active {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.platform-card .platform-item.active {
+  color: var(--ink);
+}

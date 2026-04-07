@@ -2,6 +2,12 @@ import { useMemo, useState } from "react"
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
 import type { CampaignPlatform } from "../../../entities/campaign/model/types"
 import { formatCurrency, formatNumber, formatPercent } from "../../../shared/lib/number"
+import {
+  DONUT_METRIC_KEYS,
+  DONUT_METRIC_LABEL,
+  PLATFORM_COLORS,
+  type DonutMetric,
+} from "../model/constants"
 
 export interface PlatformPerformanceDatum {
   platform: CampaignPlatform
@@ -11,25 +17,10 @@ export interface PlatformPerformanceDatum {
   conversions: number
 }
 
-type DonutMetric = "cost" | "impressions" | "clicks" | "conversions"
-
 interface PlatformPerformanceDonutProps {
   data: PlatformPerformanceDatum[]
   selectedPlatforms: CampaignPlatform[]
   onTogglePlatform: (platform: CampaignPlatform) => void
-}
-
-const METRIC_CONFIG: Record<DonutMetric, { label: string }> = {
-  cost: { label: "비용" },
-  impressions: { label: "노출수" },
-  clicks: { label: "클릭수" },
-  conversions: { label: "전환수" },
-}
-
-const PLATFORM_COLORS: Record<CampaignPlatform, string> = {
-  Google: "#818cf8",
-  Meta: "#f472b6",
-  Naver: "#34d399",
 }
 
 function formatMetricValue(metric: DonutMetric, value: number): string {
@@ -68,14 +59,14 @@ export function PlatformPerformanceDonut({
       <div className="optional-header">
         <h2>플랫폼별 성과</h2>
         <div className="chip-group" aria-label="플랫폼별 성과 메트릭 토글">
-          {(["cost", "impressions", "clicks", "conversions"] as DonutMetric[]).map((key) => (
+          {DONUT_METRIC_KEYS.map((key) => (
             <button
               key={key}
               type="button"
               className={metric === key ? "chip active" : "chip"}
               onClick={() => setMetric(key)}
             >
-              {METRIC_CONFIG[key].label}
+              {DONUT_METRIC_LABEL[key]}
             </button>
           ))}
         </div>
@@ -124,9 +115,14 @@ export function PlatformPerformanceDonut({
                   })}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ background: '#0f1526', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, fontSize: 13 }}
-                  labelStyle={{ color: '#94a3b8' }}
-                  itemStyle={{ color: '#e2e8f0' }}
+                  contentStyle={{
+                    background: "#0f1526",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 10,
+                    fontSize: 13,
+                  }}
+                  labelStyle={{ color: "#94a3b8" }}
+                  itemStyle={{ color: "#e2e8f0" }}
                   formatter={(value) => {
                     if (typeof value !== "number") return value
                     return formatMetricValue(metric, value)
@@ -138,7 +134,7 @@ export function PlatformPerformanceDonut({
 
           <div className="platform-summary">
             <p className="summary-total">
-              총 {METRIC_CONFIG[metric].label}: {formatMetricValue(metric, totalValue)}
+              총 {DONUT_METRIC_LABEL[metric]}: {formatMetricValue(metric, totalValue)}
             </p>
             <ul className="platform-list" aria-label="플랫폼별 수치와 비중">
               {chartData.map((item) => {

@@ -2,7 +2,6 @@ import { useState } from "react"
 import type { Campaign, CampaignPlatform } from "../entities/campaign/model/types"
 import { CampaignCreateModal } from "../features/campaign-create/ui/CampaignCreateModal"
 import { CampaignManagementTable } from "../features/campaign-table/ui/CampaignManagementTable"
-import { formatCurrency, formatNumber, formatPercent } from "../shared/lib/number"
 import { createLocalCampaignId } from "../shared/lib/id"
 import { ErrorFallback } from "../shared/ui/ErrorFallback"
 import { Loading } from "../shared/ui/Loading"
@@ -14,6 +13,7 @@ import { useFilterNotice } from "./hooks/useFilterNotice"
 import { useGlobalFilter } from "./hooks/useGlobalFilter"
 import { usePlatformPerformanceData } from "./hooks/usePlatformPerformanceData"
 import { GlobalFilterBar } from "./ui/GlobalFilterBar"
+import { SummaryStatsSection } from "./ui/SummaryStatsSection"
 
 export default function DashboardApp() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -125,38 +125,19 @@ export default function DashboardApp() {
         </div>
       ) : null}
 
-      <section className="stats-grid">
-        <article className="card">
-          <h3>캠페인 수</h3>
-          <p className="metric">{formatNumber(filteredCampaigns.length)}</p>
-          <p className="muted">
-            raw {formatNumber(queryMeta.campaigns.rawCount)} / dropped {formatNumber(queryMeta.campaigns.droppedCount)}
-          </p>
-        </article>
-
-        <article className="card">
-          <h3>일별 성과 행</h3>
-          <p className="metric">{formatNumber(filteredStats.length)}</p>
-          <p className="muted">
-            raw {formatNumber(queryMeta.dailyStats.rawCount)} / dropped {formatNumber(queryMeta.dailyStats.droppedCount)}{" "}
-            / merged {formatNumber(queryMeta.dailyStats.mergedCount)}
-          </p>
-        </article>
-
-        <article className="card">
-          <h3>총 집행금액</h3>
-          <p className="metric">{formatCurrency(totals.cost)}</p>
-          <p className="muted">필터 기간 기준 합계</p>
-        </article>
-
-        <article className="card">
-          <h3>파생 지표</h3>
-          <p className="muted">
-            CTR {formatPercent(derivedMetrics.ctr)} / CPC {formatCurrency(derivedMetrics.cpc)} / ROAS{" "}
-            {formatPercent(derivedMetrics.roas)}
-          </p>
-        </article>
-      </section>
+      <SummaryStatsSection
+        campaignCount={filteredCampaigns.length}
+        campaignRawCount={queryMeta.campaigns.rawCount}
+        campaignDroppedCount={queryMeta.campaigns.droppedCount}
+        dailyStatCount={filteredStats.length}
+        dailyStatRawCount={queryMeta.dailyStats.rawCount}
+        dailyStatDroppedCount={queryMeta.dailyStats.droppedCount}
+        dailyStatMergedCount={queryMeta.dailyStats.mergedCount}
+        totalCost={totals.cost}
+        ctr={derivedMetrics.ctr}
+        cpc={derivedMetrics.cpc}
+        roas={derivedMetrics.roas}
+      />
 
       <DailyTrendChart data={dailySeries} selectedMetrics={trendMetrics} onToggleMetric={toggleTrendMetric} />
 

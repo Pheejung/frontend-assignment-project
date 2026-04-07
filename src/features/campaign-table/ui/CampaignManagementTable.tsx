@@ -1,31 +1,16 @@
 import { useEffect, useMemo, useState } from "react"
-import type { CampaignPlatform, CampaignStatus } from "../../../entities/campaign/model/types"
+import type { CampaignStatus } from "../../../entities/campaign/model/types"
 import { formatCurrency, formatPercent } from "../../../shared/lib/number"
-
-export interface CampaignTableRowData {
-  id: string
-  name: string
-  status: CampaignStatus
-  platform: CampaignPlatform
-  startDate: string
-  endDate: string | null
-  totalCost: number
-  ctr: number
-  cpc: number
-  roas: number
-  hasStats: boolean
-}
+import { formatPeriod } from "../lib/tableUtils"
+import { useCampaignTableState } from "../model/useCampaignTableState"
+import type { CampaignTableRowData } from "../model/types"
+import { CampaignTablePagination } from "./CampaignTablePagination"
+import { CampaignTableToolbar } from "./CampaignTableToolbar"
 
 interface CampaignManagementTableProps {
   rows: CampaignTableRowData[]
   onBulkStatusChange: (campaignIds: string[], status: CampaignStatus) => void
 }
-
-type SortKey = "period" | "totalCost" | "ctr" | "cpc" | "roas"
-type SortDirection = "asc" | "desc"
-
-const PAGE_SIZE = 10
-const SEARCH_DEBOUNCE_MS = 300
 
 const STATUS_LABEL: Record<CampaignStatus, string> = {
   active: "진행중",
@@ -33,131 +18,33 @@ const STATUS_LABEL: Record<CampaignStatus, string> = {
   ended: "종료",
 }
 
-const STATUS_OPTIONS: CampaignStatus[] = ["active", "paused", "ended"]
+export function CampaignManagementTable({ rows, onBulkStatusChange }: CampaignManagementTableProps) {
+  const {
+    searchInput,
+    setSearchInput,
+    searchedRows,
+    pagedRows,
+    totalPages,
+    page,
+    setPage,
+    sortKey,
+    sortDirection,
+    toggleSort,
+  } = useCampaignTableState(rows)
 
-function compareDateRange(
-  leftStart: string,
-  leftEnd: string | null,
-  rightStart: string,
-  rightEnd: string | null,
-): number {
-  const startCompare = leftStart.localeCompare(rightStart)
-  if (startCompare !== 0) {
-    return startCompare
-  }
-
-  const left = leftEnd ?? "9999-12-31"
-  const right = rightEnd ?? "9999-12-31"
-  return left.localeCompare(right)
-}
-
-function formatPeriod(startDate: string, endDate: string | null): string {
-  const end = endDate ?? "-"
-  return `${startDate} ~ ${end}`
-}
-
-export function CampaignManagementTable({
-  rows,
-  onBulkStatusChange,
-}: CampaignManagementTableProps) {
-  const [searchInput, setSearchInput] = useState("")
-  const [searchTerm, setSearchTerm] = useState("")
-  const [sortKey, setSortKey] = useState<SortKey>("period")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
-  const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [bulkStatus, setBulkStatus] = useState<CampaignStatus>("active")
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setSearchTerm(searchInput)
-    }, SEARCH_DEBOUNCE_MS)
-
-    return () => {
-      window.clearTimeout(timeoutId)
-    }
-  }, [searchInput])
-
-  const searchedRows = useMemo(() => {
-    const keyword = searchTerm.trim().toLowerCase()
-    if (keyword.length === 0) {
-      return rows
-    }
-
-    return rows.filter((row) => row.name.toLowerCase().includes(keyword))
-  }, [rows, searchTerm])
-
-  const sortedRows = useMemo(() => {
-    const copied = [...searchedRows]
-
-    copied.sort((left, right) => {
-      let compareValue = 0
-
-      if (sortKey === "period") {
-        compareValue = compareDateRange(left.startDate, left.endDate, right.startDate, right.endDate)
-      }
-      if (sortKey === "totalCost") {
-        compareValue = left.totalCost - right.totalCost
-      }
-      if (sortKey === "ctr") {
-        compareValue = left.ctr - right.ctr
-      }
-      if (sortKey === "cpc") {
-        compareValue = left.cpc - right.cpc
-      }
-      if (sortKey === "roas") {
-        compareValue = left.roas - right.roas
-      }
-
-      if (compareValue === 0) {
-        return left.name.localeCompare(right.name)
-      }
-
-      return sortDirection === "asc" ? compareValue : compareValue * -1
-    })
-
-    return copied
-  }, [searchedRows, sortDirection, sortKey])
-
-  const totalPages = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE))
-
-  useEffect(() => {
-    if (page > totalPages) {
-      setPage(totalPages)
-    }
-  }, [page, totalPages])
-
-  useEffect(() => {
-    setPage(1)
-  }, [searchTerm, sortDirection, sortKey])
 
   useEffect(() => {
     const validIds = new Set(rows.map((row) => row.id))
     setSelectedIds((prev) => prev.filter((id) => validIds.has(id)))
   }, [rows])
 
-  const pagedRows = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE
-    return sortedRows.slice(start, start + PAGE_SIZE)
-  }, [page, sortedRows])
-
-  const pageIds = pagedRows.map((row) => row.id)
+  const pageIds = useMemo(() => pagedRows.map((row) => row.id), [pagedRows])
   const isPageAllSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.includes(id))
 
-  function toggleSort(nextKey: SortKey) {
-    if (sortKey === nextKey) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))
-      return
-    }
-
-    setSortKey(nextKey)
-    setSortDirection("asc")
-  }
-
   function toggleRowSelection(id: string) {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
-    )
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id]))
   }
 
   function togglePageSelection(checked: boolean) {
@@ -185,42 +72,17 @@ export function CampaignManagementTable({
     <section className="card">
       <div className="table-header">
         <h2>캠페인 관리 테이블</h2>
-        <div className="table-toolbar">
-          <label className="field-inline">
-            <span>검색</span>
-            <input
-              type="search"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="캠페인명 검색"
-              aria-label="캠페인명 검색"
-            />
-          </label>
-
-          <label className="field-inline">
-            <span>일괄 상태 변경</span>
-            <select
-              value={bulkStatus}
-              onChange={(event) => setBulkStatus(event.target.value as CampaignStatus)}
-              aria-label="일괄 상태"
-            >
-              {STATUS_OPTIONS.map((status) => (
-                <option key={status} value={status}>
-                  {STATUS_LABEL[status]}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <button type="button" className="primary" onClick={applyBulkStatusChange}>
-            적용 ({selectedIds.length})
-          </button>
-        </div>
+        <CampaignTableToolbar
+          searchInput={searchInput}
+          onSearchInputChange={setSearchInput}
+          bulkStatus={bulkStatus}
+          onBulkStatusChange={setBulkStatus}
+          selectedCount={selectedIds.length}
+          onApplyBulkStatus={applyBulkStatusChange}
+        />
       </div>
 
-      <p className="muted table-count">
-        검색 결과 {searchedRows.length}건 / 전체 {rows.length}건
-      </p>
+      <p className="muted table-count">검색 결과 {searchedRows.length}건 / 전체 {rows.length}건</p>
 
       <div className="table-wrap">
         <table>
@@ -297,21 +159,12 @@ export function CampaignManagementTable({
         </table>
       </div>
 
-      <div className="pagination">
-        <button type="button" onClick={() => setPage((prev) => Math.max(1, prev - 1))} disabled={page === 1}>
-          이전
-        </button>
-        <span>
-          {page} / {totalPages}
-        </span>
-        <button
-          type="button"
-          onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-          disabled={page === totalPages}
-        >
-          다음
-        </button>
-      </div>
+      <CampaignTablePagination
+        page={page}
+        totalPages={totalPages}
+        onPrev={() => setPage((prev) => Math.max(1, prev - 1))}
+        onNext={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+      />
     </section>
   )
 }
