@@ -64,7 +64,7 @@ export function PlatformPerformanceDonut({
   const totalValue = chartData.reduce((sum, item) => sum + item.value, 0)
 
   return (
-    <section className="card">
+    <section className="card platform-card">
       <div className="optional-header">
         <h2>플랫폼별 성과</h2>
         <div className="chip-group" aria-label="플랫폼별 성과 메트릭 토글">
@@ -95,6 +95,7 @@ export function PlatformPerformanceDonut({
                   innerRadius={72}
                   outerRadius={108}
                   paddingAngle={2}
+                  rootTabIndex={-1}
                   onClick={(_, index) => {
                     if (typeof index !== "number") {
                       return

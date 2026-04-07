@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react"
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import type { CampaignTableRowData } from "../../../features/campaign-table/ui/CampaignManagementTable"
 import { formatCurrency, formatPercent } from "../../../shared/lib/number"
 
@@ -49,29 +48,48 @@ export function TopCampaignRankingChart({ rows }: TopCampaignRankingChartProps) 
       return right.roas - left.roas
     })
 
-    return sorted.slice(0, 3).map((row, index) => ({
+    const topRows = sorted.slice(0, 3).map((row, index) => ({
+      id: row.id,
       rank: index + 1,
       name: row.name,
-      value:
-        metric === "cpc"
-          ? row.cpc
-          : metric === "ctr"
-            ? row.ctr
-            : row.roas,
-      metric,
+      platform: row.platform,
+      totalCost: row.totalCost,
+      value: metric === "cpc" ? row.cpc : metric === "ctr" ? row.ctr : row.roas,
+    }))
+
+    const values = topRows.map((row) => row.value)
+    if (values.length === 0) {
+      return []
+    }
+
+    if (metric === "cpc") {
+      const best = Math.min(...values)
+      const worst = Math.max(...values)
+      const span = worst - best
+
+      return topRows.map((row) => ({
+        ...row,
+        barPercent: span === 0 ? 100 : ((worst - row.value) / span) * 100,
+      }))
+    }
+
+    const best = Math.max(...values)
+    return topRows.map((row) => ({
+      ...row,
+      barPercent: best <= 0 ? 0 : (row.value / best) * 100,
     }))
   }, [metric, rows])
 
   return (
-    <section className="card">
-      <div className="optional-header">
-        <h2>캠페인 랭킹 Top3</h2>
-        <div className="chip-group" aria-label="캠페인 랭킹 메트릭 토글">
+    <section className="card top3-card">
+      <div className="top3-header">
+        <h2>캠페인 랭킹 Top 3</h2>
+        <div className="top3-toggle" aria-label="캠페인 랭킹 메트릭 토글">
           {(["roas", "ctr", "cpc"] as RankingMetric[]).map((key) => (
             <button
               key={key}
               type="button"
-              className={metric === key ? "chip active" : "chip"}
+              className={metric === key ? "top3-segment active" : "top3-segment"}
               onClick={() => setMetric(key)}
             >
               {METRIC_LABEL[key]}
@@ -83,37 +101,24 @@ export function TopCampaignRankingChart({ rows }: TopCampaignRankingChartProps) 
       {rankingRows.length === 0 ? (
         <p className="muted">랭킹을 계산할 캠페인 성과 데이터가 없습니다.</p>
       ) : (
-        <>
-          <div className="ranking-box">
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={rankingRows} layout="vertical" margin={{ top: 8, right: 16, left: 4, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                <XAxis type="number" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ background: '#0f1526', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, fontSize: 13 }}
-                  labelStyle={{ color: '#94a3b8' }}
-                  itemStyle={{ color: '#e2e8f0' }}
-                  formatter={(value) => {
-                    if (typeof value !== "number") return value
-                    return formatRankingValue(metric, value)
-                  }}
-                />
-                <Bar dataKey="value" fill="#6366f1" radius={[0, 6, 6, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <ol className="ranking-list">
-            {rankingRows.map((row) => (
-              <li key={`${row.name}-${row.rank}`}>
-                <span>{row.rank}위</span>
-                <span>{row.name}</span>
-                <strong>{formatRankingValue(metric, row.value)}</strong>
-              </li>
-            ))}
-          </ol>
-        </>
+        <ol className="top3-list">
+          {rankingRows.map((row) => (
+            <li key={row.id} className="top3-item">
+              <div className="top3-row">
+                <span className="top3-rank">{row.rank}</span>
+                <div className="top3-name-wrap">
+                  <strong className="top3-name">{row.name}</strong>
+                  <span className="top3-platform">{row.platform}</span>
+                </div>
+                <strong className="top3-value">{formatRankingValue(metric, row.value)}</strong>
+              </div>
+              <div className="top3-track" aria-hidden="true">
+                <span className="top3-fill" style={{ width: `${Math.max(8, row.barPercent)}%` }} />
+              </div>
+              <p className="top3-sub">집행금액 {formatCurrency(row.totalCost)}</p>
+            </li>
+          ))}
+        </ol>
       )}
     </section>
   )
