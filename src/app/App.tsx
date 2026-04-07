@@ -1,199 +1,52 @@
-import { useEffect, useMemo, useRef, useState } from "react"
-import { useCampaignsQuery } from "../entities/campaign/model/useCampaignsQuery"
-import type { Campaign, CampaignPlatform, CampaignStatus } from "../entities/campaign/model/types"
-import { useDailyStatsQuery } from "../entities/daily-stat/model/useDailyStatsQuery"
+import { useState } from "react"
+import type { Campaign, CampaignPlatform } from "../entities/campaign/model/types"
 import { CampaignCreateModal } from "../features/campaign-create/ui/CampaignCreateModal"
-import { CampaignManagementTable, type CampaignTableRowData } from "../features/campaign-table/ui/CampaignManagementTable"
-import { useDashboardStore } from "../features/global-filter/model/store"
-import {
-  aggregateByCampaignId,
-  aggregateByDate,
-  aggregateTotals,
-  createEmptyTotals,
-} from "../shared/lib/aggregate"
-import { filterCampaigns, filterDailyStats } from "../shared/lib/filter"
-import { calculateDerivedMetrics } from "../shared/lib/metrics"
+import { CampaignManagementTable } from "../features/campaign-table/ui/CampaignManagementTable"
 import { formatCurrency, formatNumber, formatPercent } from "../shared/lib/number"
+import { createLocalCampaignId } from "../shared/lib/id"
 import { ErrorFallback } from "../shared/ui/ErrorFallback"
 import { Loading } from "../shared/ui/Loading"
 import { DailyTrendChart } from "../widgets/daily-trend-chart/ui/DailyTrendChart"
-import {
-  PlatformPerformanceDonut,
-  type PlatformPerformanceDatum,
-} from "../widgets/platform-performance-donut/ui/PlatformPerformanceDonut"
+import { PlatformPerformanceDonut } from "../widgets/platform-performance-donut/ui/PlatformPerformanceDonut"
 import { TopCampaignRankingChart } from "../widgets/top-campaign-ranking/ui/TopCampaignRankingChart"
-
-const statusOptions: CampaignStatus[] = ["active", "paused", "ended"]
-const platformOptions: CampaignPlatform[] = ["Google", "Meta", "Naver"]
-
-const STATUS_LABEL: Record<CampaignStatus, string> = {
-  active: "진행중",
-  paused: "일시중지",
-  ended: "종료",
-}
-
-function createLocalCampaignId(): string {
-  return `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-}
+import { useDashboardData } from "./hooks/useDashboardData"
+import { useFilterNotice } from "./hooks/useFilterNotice"
+import { useGlobalFilter } from "./hooks/useGlobalFilter"
+import { usePlatformPerformanceData } from "./hooks/usePlatformPerformanceData"
+import { GlobalFilterBar } from "./ui/GlobalFilterBar"
 
 export default function DashboardApp() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [filterNotice, setFilterNotice] = useState<string | null>(null)
-  const filterNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { filterNotice, showFilterNotice } = useFilterNotice()
 
-  const campaignsQuery = useCampaignsQuery()
-  const dailyStatsQuery = useDailyStatsQuery()
+  const {
+    dateRange,
+    statuses,
+    platforms,
+    trendMetrics,
+    setDateRange,
+    toggleStatus,
+    togglePlatform,
+    toggleTrendMetric,
+    resetFilters,
+    addLocalCampaign,
+    bulkUpdateCampaignStatus,
+  } = useGlobalFilter()
 
-  const dateRange = useDashboardStore((state) => state.dateRange)
-  const statuses = useDashboardStore((state) => state.statuses)
-  const platforms = useDashboardStore((state) => state.platforms)
-  const trendMetrics = useDashboardStore((state) => state.trendMetrics)
-  const localCampaigns = useDashboardStore((state) => state.localCampaigns)
-  const localDailyStats = useDashboardStore((state) => state.localDailyStats)
-  const statusOverrides = useDashboardStore((state) => state.statusOverrides)
-  const spendOverrides = useDashboardStore((state) => state.spendOverrides)
-  const setDateRange = useDashboardStore((state) => state.setDateRange)
-  const toggleStatus = useDashboardStore((state) => state.toggleStatus)
-  const togglePlatform = useDashboardStore((state) => state.togglePlatform)
-  const toggleTrendMetric = useDashboardStore((state) => state.toggleTrendMetric)
-  const resetFilters = useDashboardStore((state) => state.resetFilters)
-  const addLocalCampaign = useDashboardStore((state) => state.addLocalCampaign)
-  const bulkUpdateCampaignStatus = useDashboardStore((state) => state.bulkUpdateCampaignStatus)
+  const {
+    queryMeta,
+    isDataReady,
+    mergedCampaigns,
+    mergedDailyStats,
+    filteredCampaigns,
+    filteredStats,
+    totals,
+    derivedMetrics,
+    dailySeries,
+    campaignTableRows,
+  } = useDashboardData({ dateRange, statuses, platforms })
 
-  const showFilterNotice = (message: string) => {
-    setFilterNotice(message)
-
-    if (filterNoticeTimerRef.current) {
-      clearTimeout(filterNoticeTimerRef.current)
-    }
-
-    filterNoticeTimerRef.current = setTimeout(() => {
-      setFilterNotice(null)
-    }, 1800)
-  }
-
-  useEffect(() => {
-    return () => {
-      if (filterNoticeTimerRef.current) {
-        clearTimeout(filterNoticeTimerRef.current)
-      }
-    }
-  }, [])
-
-  const campaignsData = campaignsQuery.data
-  const dailyStatsData = dailyStatsQuery.data
-
-  const mergedCampaigns = useMemo(() => {
-    const combined = [...(campaignsData?.campaigns ?? []), ...localCampaigns]
-
-    return combined.map((campaign) => {
-      const overriddenStatus = statusOverrides[campaign.id]
-      if (!overriddenStatus) {
-        return campaign
-      }
-
-      return {
-        ...campaign,
-        status: overriddenStatus,
-      }
-    })
-  }, [campaignsData?.campaigns, localCampaigns, statusOverrides])
-
-  const mergedDailyStats = useMemo(
-    () => [...(dailyStatsData?.dailyStats ?? []), ...localDailyStats],
-    [dailyStatsData?.dailyStats, localDailyStats],
-  )
-
-  const filteredCampaigns = useMemo(
-    () => filterCampaigns(mergedCampaigns, { dateRange, statuses, platforms }),
-    [mergedCampaigns, dateRange, statuses, platforms],
-  )
-
-  const filteredCampaignIds = useMemo(
-    () => new Set(filteredCampaigns.map((campaign) => campaign.id)),
-    [filteredCampaigns],
-  )
-
-  const filteredStats = useMemo(
-    () => filterDailyStats(mergedDailyStats, filteredCampaignIds, dateRange),
-    [mergedDailyStats, filteredCampaignIds, dateRange],
-  )
-
-  const totals = useMemo(() => aggregateTotals(filteredStats), [filteredStats])
-  const derivedMetrics = useMemo(() => calculateDerivedMetrics(totals), [totals])
-  const dailySeries = useMemo(() => aggregateByDate(filteredStats), [filteredStats])
-  const campaignTotals = useMemo(() => aggregateByCampaignId(filteredStats), [filteredStats])
-
-  const campaignsForDonut = useMemo(
-    () =>
-      filterCampaigns(mergedCampaigns, {
-        dateRange,
-        statuses,
-        platforms: platformOptions,
-      }),
-    [mergedCampaigns, dateRange, statuses],
-  )
-
-  const campaignIdsForDonut = useMemo(
-    () => new Set(campaignsForDonut.map((campaign) => campaign.id)),
-    [campaignsForDonut],
-  )
-
-  const statsForDonut = useMemo(
-    () => filterDailyStats(mergedDailyStats, campaignIdsForDonut, dateRange),
-    [mergedDailyStats, campaignIdsForDonut, dateRange],
-  )
-
-  const campaignTableRows = useMemo<CampaignTableRowData[]>(() => {
-    return filteredCampaigns.map((campaign) => {
-      const stat = campaignTotals.get(campaign.id)
-      const totalsForCampaign = stat ?? createEmptyTotals()
-      const metrics = calculateDerivedMetrics(totalsForCampaign)
-      const fallbackSpend = spendOverrides[campaign.id] ?? 0
-
-      return {
-        id: campaign.id,
-        name: campaign.name,
-        status: campaign.status,
-        platform: campaign.platform,
-        startDate: campaign.startDate,
-        endDate: campaign.endDate,
-        totalCost: stat ? stat.cost : fallbackSpend,
-        ctr: metrics.ctr,
-        cpc: metrics.cpc,
-        roas: metrics.roas,
-        hasStats: Boolean(stat),
-      }
-    })
-  }, [filteredCampaigns, campaignTotals, spendOverrides])
-
-  const platformPerformanceData = useMemo<PlatformPerformanceDatum[]>(() => {
-    const campaignPlatformMap = new Map(campaignsForDonut.map((campaign) => [campaign.id, campaign.platform]))
-
-    const buckets: Record<CampaignPlatform, Omit<PlatformPerformanceDatum, "platform">> = {
-      Google: { cost: 0, impressions: 0, clicks: 0, conversions: 0 },
-      Meta: { cost: 0, impressions: 0, clicks: 0, conversions: 0 },
-      Naver: { cost: 0, impressions: 0, clicks: 0, conversions: 0 },
-    }
-
-    for (const stat of statsForDonut) {
-      const platform = campaignPlatformMap.get(stat.campaignId)
-      if (!platform) {
-        continue
-      }
-
-      const target = buckets[platform]
-      target.cost += stat.cost
-      target.impressions += stat.impressions
-      target.clicks += stat.clicks
-      target.conversions += stat.conversions
-    }
-
-    return platformOptions.map((platform) => ({
-      platform,
-      ...buckets[platform],
-    }))
-  }, [campaignsForDonut, statsForDonut])
+  const platformPerformanceData = usePlatformPerformanceData(mergedCampaigns, mergedDailyStats)
 
   function handleCreateCampaign(payload: {
     name: string
@@ -212,12 +65,11 @@ export default function DashboardApp() {
       startDate: payload.startDate,
       endDate: payload.endDate,
     }
-
     addLocalCampaign(newCampaign, payload.initialSpend)
     setIsCreateModalOpen(false)
   }
 
-  if (campaignsQuery.isLoading || dailyStatsQuery.isLoading) {
+  if (queryMeta.isLoading) {
     return (
       <main className="app-shell">
         <h1>마케팅 캠페인 대시보드</h1>
@@ -226,23 +78,16 @@ export default function DashboardApp() {
     )
   }
 
-  if (campaignsQuery.error || dailyStatsQuery.error) {
-    const message =
-      campaignsQuery.error instanceof Error
-        ? campaignsQuery.error.message
-        : dailyStatsQuery.error instanceof Error
-          ? dailyStatsQuery.error.message
-          : "Failed to load data."
-
+  if (queryMeta.error) {
     return (
       <main className="app-shell">
         <h1>마케팅 캠페인 대시보드</h1>
-        <ErrorFallback message={message} />
+        <ErrorFallback message={queryMeta.error.message} />
       </main>
     )
   }
 
-  if (!campaignsData || !dailyStatsData) {
+  if (!isDataReady) {
     return (
       <main className="app-shell">
         <h1>마케팅 캠페인 대시보드</h1>
@@ -263,95 +108,16 @@ export default function DashboardApp() {
         </button>
       </header>
 
-      <section className="card filter-card">
-        <h2 className="sr-only">글로벌 필터</h2>
-        <div className="filter-toolbar">
-          <div className="filter-group period-group">
-            <span className="group-label">집행기간</span>
-            <label className="date-pill">
-              <input
-                type="date"
-                value={dateRange.from}
-                onChange={(event) =>
-                  setDateRange({
-                    from: event.target.value,
-                    to: dateRange.to,
-                  })
-                }
-              />
-            </label>
-            <span className="range-separator">~</span>
-            <label className="date-pill">
-              <input
-                type="date"
-                value={dateRange.to}
-                onChange={(event) =>
-                  setDateRange({
-                    from: dateRange.from,
-                    to: event.target.value,
-                  })
-                }
-              />
-            </label>
-          </div>
-
-          <span className="toolbar-divider" aria-hidden="true" />
-
-          <div className="filter-group">
-            <span className="group-label">상태</span>
-            <div className="chip-group compact">
-              {statusOptions.map((status) => (
-                <button
-                  key={status}
-                  type="button"
-                  className={statuses.includes(status) ? "chip active" : "chip"}
-                  onClick={() => {
-                    if (statuses.includes(status) && statuses.length === 1) {
-                      showFilterNotice("상태는 최소 1개 이상 선택해야 합니다.")
-                      return
-                    }
-
-                    toggleStatus(status)
-                  }}
-                >
-                  {STATUS_LABEL[status]}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <span className="toolbar-divider" aria-hidden="true" />
-
-          <div className="filter-group">
-            <span className="group-label">매체</span>
-            <div className="chip-group compact">
-              {platformOptions.map((platform) => (
-                <button
-                  key={platform}
-                  type="button"
-                  className={platforms.includes(platform) ? "chip active" : "chip"}
-                  onClick={() => {
-                    if (platforms.includes(platform) && platforms.length === 1) {
-                      showFilterNotice("매체는 최소 1개 이상 선택해야 합니다.")
-                      return
-                    }
-
-                    togglePlatform(platform)
-                  }}
-                >
-                  {platform}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <span className="toolbar-divider" aria-hidden="true" />
-
-          <button type="button" className="secondary reset-inline" onClick={resetFilters}>
-            초기화
-          </button>
-        </div>
-      </section>
+      <GlobalFilterBar
+        dateRange={dateRange}
+        statuses={statuses}
+        platforms={platforms}
+        onDateRangeChange={setDateRange}
+        onToggleStatus={toggleStatus}
+        onTogglePlatform={togglePlatform}
+        onReset={resetFilters}
+        onNotice={showFilterNotice}
+      />
 
       {filterNotice ? (
         <div className="toast-message" role="status" aria-live="polite">
@@ -364,7 +130,7 @@ export default function DashboardApp() {
           <h3>캠페인 수</h3>
           <p className="metric">{formatNumber(filteredCampaigns.length)}</p>
           <p className="muted">
-            raw {formatNumber(campaignsData.rawCount)} / dropped {formatNumber(campaignsData.droppedCount)}
+            raw {formatNumber(queryMeta.campaigns.rawCount)} / dropped {formatNumber(queryMeta.campaigns.droppedCount)}
           </p>
         </article>
 
@@ -372,8 +138,8 @@ export default function DashboardApp() {
           <h3>일별 성과 행</h3>
           <p className="metric">{formatNumber(filteredStats.length)}</p>
           <p className="muted">
-            raw {formatNumber(dailyStatsData.rawCount)} / dropped {formatNumber(dailyStatsData.droppedCount)} / merged{" "}
-            {formatNumber(dailyStatsData.mergedCount)}
+            raw {formatNumber(queryMeta.dailyStats.rawCount)} / dropped {formatNumber(queryMeta.dailyStats.droppedCount)}{" "}
+            / merged {formatNumber(queryMeta.dailyStats.mergedCount)}
           </p>
         </article>
 
@@ -392,11 +158,7 @@ export default function DashboardApp() {
         </article>
       </section>
 
-      <DailyTrendChart
-        data={dailySeries}
-        selectedMetrics={trendMetrics}
-        onToggleMetric={toggleTrendMetric}
-      />
+      <DailyTrendChart data={dailySeries} selectedMetrics={trendMetrics} onToggleMetric={toggleTrendMetric} />
 
       <section className="optional-grid">
         <PlatformPerformanceDonut
@@ -407,10 +169,7 @@ export default function DashboardApp() {
         <TopCampaignRankingChart rows={campaignTableRows} />
       </section>
 
-      <CampaignManagementTable
-        rows={campaignTableRows}
-        onBulkStatusChange={bulkUpdateCampaignStatus}
-      />
+      <CampaignManagementTable rows={campaignTableRows} onBulkStatusChange={bulkUpdateCampaignStatus} />
 
       <CampaignCreateModal
         open={isCreateModalOpen}
