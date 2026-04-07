@@ -91,6 +91,7 @@ export function TopCampaignRankingChart({ rows }: TopCampaignRankingChartProps) 
               type="button"
               className={metric === key ? "top3-segment active" : "top3-segment"}
               onClick={() => setMetric(key)}
+              aria-pressed={metric === key}
             >
               {METRIC_LABEL[key]}
             </button>

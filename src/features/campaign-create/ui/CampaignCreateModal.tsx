@@ -1,4 +1,4 @@
-import { useEffect, type MouseEvent } from "react"
+import { useEffect, useRef, type MouseEvent } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import type { CampaignPlatform } from "../../../entities/campaign/model/types"
@@ -7,6 +7,23 @@ import {
   type CampaignCreateFormValues,
   PLATFORM_OPTIONS,
 } from "../model/campaignCreateSchema"
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return [...container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter((element) => {
+    if (element.getAttribute("aria-hidden") === "true") {
+      return false
+    }
+
+    if (element.tabIndex === -1) {
+      return false
+    }
+
+    return true
+  })
+}
 
 export interface CampaignCreatePayload {
   name: string
@@ -24,6 +41,9 @@ interface CampaignCreateModalProps {
 }
 
 export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
   const {
     register,
     handleSubmit,
@@ -42,33 +62,109 @@ export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateM
   })
 
   useEffect(() => {
-    if (open) reset()
+    if (open) {
+      reset()
+    }
   }, [open, reset])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
+
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+
+    const modal = modalRef.current
+    if (modal) {
+      window.requestAnimationFrame(() => {
+        const focusables = getFocusableElements(modal)
+        const target = focusables[0] ?? modal
+        target.focus()
+      })
+    }
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose()
+      if (event.key === "Escape") {
+        event.preventDefault()
+        onClose()
+        return
+      }
+
+      if (event.key !== "Tab") {
+        return
+      }
+
+      const root = modalRef.current
+      if (!root) {
+        return
+      }
+
+      const focusables = getFocusableElements(root)
+      if (focusables.length === 0) {
+        event.preventDefault()
+        root.focus()
+        return
+      }
+
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      if (!first || !last) {
+        return
+      }
+
+      const active = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      const isInside = active ? root.contains(active) : false
+
+      if (event.shiftKey) {
+        if (!isInside || active === first) {
+          event.preventDefault()
+          last.focus()
+        }
+        return
+      }
+
+      if (!isInside || active === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
 
     document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+      document.body.style.overflow = originalOverflow
+      previousFocusRef.current?.focus()
+    }
   }, [open, onClose])
 
   if (!open) return null
 
   function handleOverlayClick(event: MouseEvent<HTMLDivElement>) {
-    if (event.target === event.currentTarget) onClose()
+    if (event.target === event.currentTarget) {
+      onClose()
+    }
   }
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label="캠페인 등록">
+      <div
+        ref={modalRef}
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="campaign-create-title"
+        aria-describedby="campaign-create-subtitle"
+        tabIndex={-1}
+      >
         <div className="modal-header">
           <div>
-            <h2>캠페인 등록</h2>
-            <p className="modal-subtitle">신규 캠페인을 생성하면 대시보드와 테이블에 즉시 반영됩니다.</p>
+            <h2 id="campaign-create-title">캠페인 등록</h2>
+            <p id="campaign-create-subtitle" className="modal-subtitle">
+              신규 캠페인을 생성하면 대시보드와 테이블에 즉시 반영됩니다.
+            </p>
           </div>
           <button type="button" className="ghost modal-close" onClick={onClose} aria-label="닫기">
             <span aria-hidden="true">×</span>

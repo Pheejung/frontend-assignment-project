@@ -65,6 +65,7 @@ export function PlatformPerformanceDonut({
               type="button"
               className={metric === key ? "chip active" : "chip"}
               onClick={() => setMetric(key)}
+              aria-pressed={metric === key}
             >
               {DONUT_METRIC_LABEL[key]}
             </button>
@@ -141,7 +142,13 @@ export function PlatformPerformanceDonut({
                 const isActive = selectedPlatforms.includes(item.platform)
                 return (
                   <li key={item.platform} className={isActive ? "platform-item active" : "platform-item"}>
-                    <button type="button" className="platform-toggle" onClick={() => onTogglePlatform(item.platform)}>
+                    <button
+                      type="button"
+                      className="platform-toggle"
+                      onClick={() => onTogglePlatform(item.platform)}
+                      aria-pressed={isActive}
+                      aria-label={`${item.platform} 매체 필터 토글`}
+                    >
                       <span className="platform-dot" style={{ backgroundColor: PLATFORM_COLORS[item.platform] }} />
                       <span>{item.platform}</span>
                     </button>

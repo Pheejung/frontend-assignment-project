@@ -32,7 +32,7 @@ export function GlobalFilterBar({
   onNotice,
 }: GlobalFilterBarProps) {
   return (
-    <section className="card filter-card">
+    <section className="card filter-card" aria-label="글로벌 필터">
       <h2 className="sr-only">글로벌 필터</h2>
       <div className="filter-toolbar">
         <div className="filter-group period-group">
@@ -40,6 +40,7 @@ export function GlobalFilterBar({
           <label className="date-pill">
             <input
               type="date"
+              aria-label="집행 시작일"
               value={dateRange.from}
               onChange={(e) => onDateRangeChange({ from: e.target.value, to: dateRange.to })}
             />
@@ -48,6 +49,7 @@ export function GlobalFilterBar({
           <label className="date-pill">
             <input
               type="date"
+              aria-label="집행 종료일"
               value={dateRange.to}
               onChange={(e) => onDateRangeChange({ from: dateRange.from, to: e.target.value })}
             />
@@ -56,55 +58,65 @@ export function GlobalFilterBar({
 
         <span className="toolbar-divider" aria-hidden="true" />
 
-        <div className="filter-group">
+        <div className="filter-group" role="group" aria-label="상태 필터">
           <span className="group-label">상태</span>
           <div className="chip-group compact">
-            {statusOptions.map((status) => (
-              <button
-                key={status}
-                type="button"
-                className={statuses.includes(status) ? "chip active" : "chip"}
-                onClick={() => {
-                  if (statuses.includes(status) && statuses.length === 1) {
-                    onNotice("상태는 최소 1개 이상 선택해야 합니다.")
-                    return
-                  }
-                  onToggleStatus(status)
-                }}
-              >
-                {STATUS_LABEL[status]}
-              </button>
-            ))}
+            {statusOptions.map((status) => {
+              const isActive = statuses.includes(status)
+
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  className={isActive ? "chip active" : "chip"}
+                  aria-pressed={isActive}
+                  onClick={() => {
+                    if (isActive && statuses.length === 1) {
+                      onNotice("상태는 최소 1개 이상 선택해야 합니다.")
+                      return
+                    }
+                    onToggleStatus(status)
+                  }}
+                >
+                  {STATUS_LABEL[status]}
+                </button>
+              )
+            })}
           </div>
         </div>
 
         <span className="toolbar-divider" aria-hidden="true" />
 
-        <div className="filter-group">
+        <div className="filter-group" role="group" aria-label="매체 필터">
           <span className="group-label">매체</span>
           <div className="chip-group compact">
-            {platformOptions.map((platform) => (
-              <button
-                key={platform}
-                type="button"
-                className={platforms.includes(platform) ? "chip active" : "chip"}
-                onClick={() => {
-                  if (platforms.includes(platform) && platforms.length === 1) {
-                    onNotice("매체는 최소 1개 이상 선택해야 합니다.")
-                    return
-                  }
-                  onTogglePlatform(platform)
-                }}
-              >
-                {platform}
-              </button>
-            ))}
+            {platformOptions.map((platform) => {
+              const isActive = platforms.includes(platform)
+
+              return (
+                <button
+                  key={platform}
+                  type="button"
+                  className={isActive ? "chip active" : "chip"}
+                  aria-pressed={isActive}
+                  onClick={() => {
+                    if (isActive && platforms.length === 1) {
+                      onNotice("매체는 최소 1개 이상 선택해야 합니다.")
+                      return
+                    }
+                    onTogglePlatform(platform)
+                  }}
+                >
+                  {platform}
+                </button>
+              )
+            })}
           </div>
         </div>
 
         <span className="toolbar-divider" aria-hidden="true" />
 
-        <button type="button" className="secondary reset-inline" onClick={onReset}>
+        <button type="button" className="secondary reset-inline" onClick={onReset} aria-label="필터 초기화">
           초기화
         </button>
       </div>
