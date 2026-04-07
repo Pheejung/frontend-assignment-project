@@ -24,12 +24,12 @@ const metricConfig: Record<
 > = {
   impressions: {
     label: '노출수',
-    color: '#2563eb',
+    color: '#818cf8',
     dataKey: 'impressions',
   },
   clicks: {
     label: '클릭수',
-    color: '#ef4444',
+    color: '#34d399',
     dataKey: 'clicks',
   },
 }
@@ -71,14 +71,15 @@ export function DailyTrendChart({
         <div className="chart-box">
           <ResponsiveContainer width="100%" height={320}>
             <LineChart data={data} margin={{ top: 16, right: 16, left: 8, bottom: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-              <YAxis tickFormatter={formatNumber} tick={{ fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={formatNumber} tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} width={72} />
               <Tooltip
+                contentStyle={{ background: '#0f1526', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, fontSize: 13 }}
+                labelStyle={{ color: '#94a3b8', marginBottom: 4 }}
+                itemStyle={{ color: '#e2e8f0' }}
                 formatter={(value) => {
-                  if (typeof value === 'number') {
-                    return formatNumber(value)
-                  }
+                  if (typeof value === 'number') return formatNumber(value)
                   if (typeof value === 'string') {
                     const numeric = Number(value)
                     return Number.isFinite(numeric) ? formatNumber(numeric) : value
@@ -86,7 +87,7 @@ export function DailyTrendChart({
                   return ''
                 }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: 13, color: '#94a3b8' }} />
 
               {selectedMetrics.map((metric) => (
                 <Line

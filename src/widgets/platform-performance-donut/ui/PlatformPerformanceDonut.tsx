@@ -27,9 +27,9 @@ const METRIC_CONFIG: Record<DonutMetric, { label: string }> = {
 }
 
 const PLATFORM_COLORS: Record<CampaignPlatform, string> = {
-  Google: "#2563eb",
-  Meta: "#ef4444",
-  Naver: "#16a34a",
+  Google: "#818cf8",
+  Meta: "#f472b6",
+  Naver: "#34d399",
 }
 
 function formatMetricValue(metric: DonutMetric, value: number): string {
@@ -123,10 +123,11 @@ export function PlatformPerformanceDonut({
                   })}
                 </Pie>
                 <Tooltip
+                  contentStyle={{ background: '#0f1526', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, fontSize: 13 }}
+                  labelStyle={{ color: '#94a3b8' }}
+                  itemStyle={{ color: '#e2e8f0' }}
                   formatter={(value) => {
-                    if (typeof value !== "number") {
-                      return value
-                    }
+                    if (typeof value !== "number") return value
                     return formatMetricValue(metric, value)
                   }}
                 />

@@ -87,18 +87,19 @@ export function TopCampaignRankingChart({ rows }: TopCampaignRankingChartProps) 
           <div className="ranking-box">
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={rankingRows} layout="vertical" margin={{ top: 8, right: 16, left: 4, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis type="number" tick={{ fontSize: 12 }} />
-                <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                <XAxis type="number" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip
+                  contentStyle={{ background: '#0f1526', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, fontSize: 13 }}
+                  labelStyle={{ color: '#94a3b8' }}
+                  itemStyle={{ color: '#e2e8f0' }}
                   formatter={(value) => {
-                    if (typeof value !== "number") {
-                      return value
-                    }
+                    if (typeof value !== "number") return value
                     return formatRankingValue(metric, value)
                   }}
                 />
-                <Bar dataKey="value" fill="#0f172a" radius={[0, 8, 8, 0]} />
+                <Bar dataKey="value" fill="#6366f1" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
