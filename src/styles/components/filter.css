@@ -161,3 +161,21 @@
     display: none;
   }
 }
+
+@media (max-width: 560px) {
+  .period-group {
+    width: 100%;
+  }
+
+  .date-pill {
+    width: calc(50% - 12px);
+  }
+
+  .date-pill input {
+    width: 100%;
+  }
+
+  .reset-inline {
+    width: 100%;
+  }
+}

@@ -122,3 +122,15 @@ tbody tr:hover {
     padding: 9px 10px;
   }
 }
+
+@media (max-width: 560px) {
+  .pagination {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .table-count {
+    margin-top: 8px;
+    font-size: 11px;
+  }
+}

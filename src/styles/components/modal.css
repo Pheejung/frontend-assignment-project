@@ -110,3 +110,20 @@
     min-width: 88px;
   }
 }
+
+@media (max-width: 560px) {
+  .modal {
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+}
