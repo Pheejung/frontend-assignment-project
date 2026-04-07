@@ -16,3 +16,8 @@ export interface CampaignTableRowData {
 
 export type SortKey = "period" | "totalCost" | "ctr" | "cpc" | "roas"
 export type SortDirection = "asc" | "desc"
+
+export interface SortRule {
+  key: SortKey
+  direction: SortDirection
+}

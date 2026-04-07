@@ -1,4 +1,4 @@
-import type { CampaignTableRowData, SortDirection, SortKey } from "../model/types"
+import type { CampaignTableRowData, SortDirection, SortKey, SortRule } from "../model/types"
 
 export function formatPeriod(startDate: string, endDate: string | null): string {
   const end = endDate ?? "-"
@@ -21,37 +21,47 @@ function compareDateRange(
   return left.localeCompare(right)
 }
 
-export function sortCampaignRows(
-  rows: CampaignTableRowData[],
-  sortKey: SortKey,
-  sortDirection: SortDirection,
-): CampaignTableRowData[] {
+function compareBySortKey(left: CampaignTableRowData, right: CampaignTableRowData, sortKey: SortKey): number {
+  if (sortKey === "period") {
+    return compareDateRange(left.startDate, left.endDate, right.startDate, right.endDate)
+  }
+  if (sortKey === "totalCost") {
+    return left.totalCost - right.totalCost
+  }
+  if (sortKey === "ctr") {
+    return left.ctr - right.ctr
+  }
+  if (sortKey === "cpc") {
+    return left.cpc - right.cpc
+  }
+  return left.roas - right.roas
+}
+
+function applyDirection(value: number, direction: SortDirection): number {
+  return direction === "asc" ? value : value * -1
+}
+
+export function sortCampaignRows(rows: CampaignTableRowData[], sortRules: SortRule[]): CampaignTableRowData[] {
   const copied = [...rows]
 
+  if (sortRules.length === 0) {
+    return copied
+  }
+
   copied.sort((left, right) => {
-    let compareValue = 0
-
-    if (sortKey === "period") {
-      compareValue = compareDateRange(left.startDate, left.endDate, right.startDate, right.endDate)
-    }
-    if (sortKey === "totalCost") {
-      compareValue = left.totalCost - right.totalCost
-    }
-    if (sortKey === "ctr") {
-      compareValue = left.ctr - right.ctr
-    }
-    if (sortKey === "cpc") {
-      compareValue = left.cpc - right.cpc
-    }
-    if (sortKey === "roas") {
-      compareValue = left.roas - right.roas
+    for (const rule of sortRules) {
+      const compared = compareBySortKey(left, right, rule.key)
+      if (compared !== 0) {
+        return applyDirection(compared, rule.direction)
+      }
     }
 
-    if (compareValue === 0) {
-      return left.name.localeCompare(right.name)
+    const nameCompare = left.name.localeCompare(right.name)
+    if (nameCompare !== 0) {
+      return nameCompare
     }
 
-    return sortDirection === "asc" ? compareValue : compareValue * -1
+    return left.id.localeCompare(right.id)
   })
 
   return copied

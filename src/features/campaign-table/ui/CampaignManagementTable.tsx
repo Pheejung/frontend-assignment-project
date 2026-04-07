@@ -3,7 +3,7 @@ import type { CampaignStatus } from "../../../entities/campaign/model/types"
 import { formatCurrency, formatPercent } from "../../../shared/lib/number"
 import { formatPeriod } from "../lib/tableUtils"
 import { useCampaignTableState } from "../model/useCampaignTableState"
-import type { CampaignTableRowData } from "../model/types"
+import type { CampaignTableRowData, SortKey } from "../model/types"
 import { CampaignTablePagination } from "./CampaignTablePagination"
 import { CampaignTableToolbar } from "./CampaignTableToolbar"
 
@@ -27,9 +27,9 @@ export function CampaignManagementTable({ rows, onBulkStatusChange }: CampaignMa
     totalPages,
     page,
     setPage,
-    sortKey,
-    sortDirection,
     toggleSort,
+    getSortDirection,
+    getSortPriority,
   } = useCampaignTableState(rows)
 
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -68,6 +68,15 @@ export function CampaignManagementTable({ rows, onBulkStatusChange }: CampaignMa
     setSelectedIds([])
   }
 
+  function renderSortBadge(key: SortKey) {
+    const direction = getSortDirection(key)
+    if (!direction) return ""
+
+    const priority = getSortPriority(key)
+    const arrow = direction === "asc" ? "▲" : "▼"
+    return `${arrow}${priority ?? ""}`
+  }
+
   return (
     <section className="card">
       <div className="table-header">
@@ -101,27 +110,27 @@ export function CampaignManagementTable({ rows, onBulkStatusChange }: CampaignMa
               <th>매체</th>
               <th>
                 <button type="button" className="table-sort" onClick={() => toggleSort("period")}>
-                  집행기간 {sortKey === "period" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
+                  집행기간 {renderSortBadge("period")}
                 </button>
               </th>
               <th>
                 <button type="button" className="table-sort" onClick={() => toggleSort("totalCost")}>
-                  총 집행금액 {sortKey === "totalCost" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
+                  총 집행금액 {renderSortBadge("totalCost")}
                 </button>
               </th>
               <th>
                 <button type="button" className="table-sort" onClick={() => toggleSort("ctr")}>
-                  CTR {sortKey === "ctr" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
+                  CTR {renderSortBadge("ctr")}
                 </button>
               </th>
               <th>
                 <button type="button" className="table-sort" onClick={() => toggleSort("cpc")}>
-                  CPC {sortKey === "cpc" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
+                  CPC {renderSortBadge("cpc")}
                 </button>
               </th>
               <th>
                 <button type="button" className="table-sort" onClick={() => toggleSort("roas")}>
-                  ROAS {sortKey === "roas" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
+                  ROAS {renderSortBadge("roas")}
                 </button>
               </th>
             </tr>
