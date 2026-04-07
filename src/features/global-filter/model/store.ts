@@ -23,21 +23,17 @@ interface DashboardStoreState {
   toggleTrendMetric: (metric: TrendMetric) => void
   resetFilters: () => void
   addLocalCampaign: (campaign: Campaign, initialSpend?: number) => void
-  addLocalDailyStats: (stats: DailyStat[]) => void
   bulkUpdateCampaignStatus: (campaignIds: string[], status: CampaignStatus) => void
 }
 
 function toggleSelectionKeepAtLeastOne<T extends string>(items: T[], value: T): T[] {
   if (items.includes(value)) {
-    if (items.length === 1) {
-      return items
-    }
-
+    if (items.length === 1) return items
     return items.filter((item) => item !== value)
   }
-
   return [...items, value]
 }
+
 
 export const useDashboardStore = create<DashboardStoreState>((set) => ({
   dateRange: getCurrentMonthRange(),
@@ -94,10 +90,6 @@ export const useDashboardStore = create<DashboardStoreState>((set) => ({
 
       return {
         localCampaigns: [...state.localCampaigns, campaign],
-        statusOverrides: {
-          ...state.statusOverrides,
-          [campaign.id]: campaign.status,
-        },
         spendOverrides: hasSpend
           ? {
               ...state.spendOverrides,
@@ -106,11 +98,6 @@ export const useDashboardStore = create<DashboardStoreState>((set) => ({
           : state.spendOverrides,
       }
     }),
-
-  addLocalDailyStats: (stats) =>
-    set((state) => ({
-      localDailyStats: [...state.localDailyStats, ...stats],
-    })),
 
   bulkUpdateCampaignStatus: (campaignIds, status) =>
     set((state) => {
