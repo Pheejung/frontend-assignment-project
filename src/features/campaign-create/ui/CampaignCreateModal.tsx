@@ -1,26 +1,24 @@
 import { useEffect, useRef, type MouseEvent } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import dayjs from "dayjs"
 import type { CampaignPlatform } from "../../../entities/campaign/model/types"
 import {
   campaignCreateSchema,
   type CampaignCreateFormValues,
   PLATFORM_OPTIONS,
 } from "../model/campaignCreateSchema"
+import { Button } from "../../../shared/ui/Button"
+import { Input } from "../../../shared/ui/Input"
+import { Select } from "../../../shared/ui/Select"
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
   return [...container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter((element) => {
-    if (element.getAttribute("aria-hidden") === "true") {
-      return false
-    }
-
-    if (element.tabIndex === -1) {
-      return false
-    }
-
+    if (element.getAttribute("aria-hidden") === "true") return false
+    if (element.tabIndex === -1) return false
     return true
   })
 }
@@ -44,10 +42,14 @@ export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateM
   const modalRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
+  const todayStr = dayjs().format("YYYY-MM-DD")
+  const weekLaterStr = dayjs().add(7, "day").format("YYYY-MM-DD")
+
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<CampaignCreateFormValues>({
     resolver: zodResolver(campaignCreateSchema),
@@ -56,21 +58,28 @@ export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateM
       platform: "Google",
       budget: undefined,
       initialSpend: undefined,
-      startDate: "",
-      endDate: "",
+      startDate: todayStr,
+      endDate: weekLaterStr,
     },
   })
 
-  useEffect(() => {
-    if (open) {
-      reset()
-    }
-  }, [open, reset])
+  const startDate = watch("startDate")
 
   useEffect(() => {
-    if (!open) {
-      return
+    if (open) {
+      reset({
+        name: "",
+        platform: "Google",
+        budget: undefined,
+        initialSpend: undefined,
+        startDate: todayStr,
+        endDate: weekLaterStr,
+      })
     }
+  }, [open, reset, todayStr, weekLaterStr])
+
+  useEffect(() => {
+    if (!open) return
 
     previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const originalOverflow = document.body.style.overflow
@@ -91,15 +100,10 @@ export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateM
         onClose()
         return
       }
-
-      if (event.key !== "Tab") {
-        return
-      }
+      if (event.key !== "Tab") return
 
       const root = modalRef.current
-      if (!root) {
-        return
-      }
+      if (!root) return
 
       const focusables = getFocusableElements(root)
       if (focusables.length === 0) {
@@ -110,9 +114,7 @@ export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateM
 
       const first = focusables[0]
       const last = focusables[focusables.length - 1]
-      if (!first || !last) {
-        return
-      }
+      if (!first || !last) return
 
       const active = document.activeElement instanceof HTMLElement ? document.activeElement : null
       const isInside = active ? root.contains(active) : false
@@ -143,9 +145,7 @@ export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateM
   if (!open) return null
 
   function handleOverlayClick(event: MouseEvent<HTMLDivElement>) {
-    if (event.target === event.currentTarget) {
-      onClose()
-    }
+    if (event.target === event.currentTarget) onClose()
   }
 
   return (
@@ -166,34 +166,34 @@ export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateM
               신규 캠페인을 생성하면 대시보드와 테이블에 즉시 반영됩니다.
             </p>
           </div>
-          <button type="button" className="ghost modal-close" onClick={onClose} aria-label="닫기">
+          <Button variant="ghost" className="modal-close" onClick={onClose} aria-label="닫기">
             <span aria-hidden="true">×</span>
-          </button>
+          </Button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="modal-form">
           <label className="field-block">
             <span>캠페인명</span>
-            <input {...register("name")} placeholder="캠페인명을 입력하세요" />
+            <Input {...register("name")} placeholder="캠페인명을 입력하세요" />
             {errors.name && <small className="field-error">{errors.name.message}</small>}
           </label>
 
           <label className="field-block">
             <span>광고 매체</span>
-            <select {...register("platform")}>
+            <Select {...register("platform")}>
               {PLATFORM_OPTIONS.map((platform) => (
                 <option key={platform} value={platform}>
                   {platform}
                 </option>
               ))}
-            </select>
+            </Select>
             {errors.platform && <small className="field-error">{errors.platform.message}</small>}
           </label>
 
           <div className="field-row two-col">
             <label className="field-block">
               <span>예산</span>
-              <input
+              <Input
                 type="number"
                 step={1}
                 min={100}
@@ -206,7 +206,7 @@ export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateM
 
             <label className="field-block">
               <span>집행 금액</span>
-              <input
+              <Input
                 type="number"
                 step={1}
                 min={0}
@@ -221,13 +221,13 @@ export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateM
           <div className="field-row two-col">
             <label className="field-block">
               <span>시작일</span>
-              <input type="date" {...register("startDate")} />
+              <Input type="date" {...register("startDate")} />
               {errors.startDate && <small className="field-error">{errors.startDate.message}</small>}
             </label>
 
             <label className="field-block">
               <span>종료일</span>
-              <input type="date" {...register("endDate")} />
+              <Input type="date" min={startDate || undefined} {...register("endDate")} />
               {errors.endDate && <small className="field-error">{errors.endDate.message}</small>}
             </label>
           </div>
@@ -235,12 +235,12 @@ export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateM
           <p className="modal-note">상태는 등록 시 자동으로 진행중(active)으로 설정됩니다.</p>
 
           <div className="modal-actions">
-            <button type="button" className="secondary" onClick={onClose}>
+            <Button variant="secondary" type="button" onClick={onClose}>
               취소
-            </button>
-            <button type="submit" className="primary">
+            </Button>
+            <Button variant="primary" type="submit">
               등록
-            </button>
+            </Button>
           </div>
         </form>
       </div>
