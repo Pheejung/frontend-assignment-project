@@ -1,0 +1,59 @@
+/* ── Chip Group ────────────────────────────────────────────── */
+.chip-group {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.chip-group.compact {
+  margin-top: 0;
+}
+
+/* ── Chip ──────────────────────────────────────────────────── */
+.chip {
+  height: 30px;
+  min-width: 56px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: none;
+  transform: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.chip:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: transparent;
+  color: var(--ink);
+}
+
+.chip.active {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: var(--ink-strong);
+  font-weight: 700;
+}
+
+.chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  .chip {
+    height: 32px;
+    font-size: 12px;
+    padding: 0 11px;
+  }
+}

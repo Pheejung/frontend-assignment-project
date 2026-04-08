@@ -1,4 +1,15 @@
 /* Table */
+table input[type="checkbox"] {
+  cursor: pointer;
+  outline: none;
+}
+
+table input[type="checkbox"]:focus,
+table input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 .table-header {
   display: flex;
   align-items: flex-start;
@@ -9,9 +20,21 @@
 
 .table-toolbar {
   display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbar-fields {
+  display: flex;
   align-items: flex-end;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.toolbar-apply-btn {
+  align-self: center;
+  margin-top: 24px;
 }
 
 .field-inline {
@@ -22,6 +45,23 @@
 
 .table-count {
   margin-top: 10px;
+}
+
+.table-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+
+.selected-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: #818cf8;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 .table-wrap {
@@ -45,11 +85,6 @@ td {
   font-size: 13px;
   padding: 11px 12px;
   white-space: nowrap;
-}
-
-td:last-child,
-th:last-child {
-  border-bottom-color: transparent;
 }
 
 tbody tr:last-child td {

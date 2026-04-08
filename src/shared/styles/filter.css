@@ -1,4 +1,4 @@
-/* Filter */
+/* ── Filter Card ───────────────────────────────────────────── */
 .filter-card {
   padding: 14px 20px;
   background: rgba(255, 255, 255, 0.05);
@@ -31,6 +31,7 @@
   gap: 8px;
 }
 
+/* ── Date Pill ─────────────────────────────────────────────── */
 .date-pill {
   display: block;
 }
@@ -58,61 +59,7 @@
   flex-shrink: 0;
 }
 
-.chip-group {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 6px;
-  padding: 4px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.chip-group.compact {
-  margin-top: 0;
-  gap: 4px;
-}
-
-.chip {
-  height: 30px;
-  min-width: 56px;
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--ink-muted);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: none;
-  transform: none;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-.chip:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: transparent;
-  color: var(--ink);
-}
-
-.chip.active {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.24);
-  color: var(--ink-strong);
-  font-weight: 700;
-}
-
-.chip:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.chip-group.compact .chip {
-  height: 30px;
-}
-
+/* ── Reset Button ──────────────────────────────────────────── */
 .reset-inline {
   width: auto;
   min-width: 96px;
@@ -120,6 +67,7 @@
   font-size: 13px;
 }
 
+/* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .date-pill input {
     width: 144px;
@@ -144,12 +92,6 @@
     width: min(144px, calc(50vw - 48px));
     height: 36px;
     font-size: 12px;
-  }
-
-  .chip {
-    height: 32px;
-    font-size: 12px;
-    padding: 0 11px;
   }
 
   .reset-inline {

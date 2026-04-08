@@ -1,0 +1,75 @@
+/* ── Button ────────────────────────────────────────────────── */
+button {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  height: 34px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: none;
+  transform: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* Variants */
+button.secondary {
+  width: 100px;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: var(--ink-muted);
+}
+
+button.secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.26);
+  color: var(--ink);
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.4);
+}
+
+button.ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-muted);
+  box-shadow: none;
+  width: auto;
+}
+
+button.ghost:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button { transition: none; }
+}
