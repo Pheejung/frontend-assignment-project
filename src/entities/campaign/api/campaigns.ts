@@ -1,6 +1,6 @@
-import { normalizeCampaigns } from '../../entities/campaign/lib/normalize'
-import type { Campaign, CampaignApi } from '../../entities/campaign/model/types'
-import { fetchJson } from './client'
+import { normalizeCampaigns } from '../lib/normalize'
+import type { Campaign, CampaignApi } from '../model/types'
+import { fetchJson } from '../../../shared/api/client'
 
 export interface CampaignQueryData {
   campaigns: Campaign[]

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 import type { CampaignTableRowData } from "../../../features/campaign-table/model/types"
 import { formatCurrency, formatPercent } from "../../../shared/lib/number"
+import { Chip } from "../../../shared/ui/Chip"
 
 type RankingMetric = "roas" | "ctr" | "cpc"
 
@@ -15,9 +16,7 @@ const METRIC_LABEL: Record<RankingMetric, string> = {
 }
 
 function formatRankingValue(metric: RankingMetric, value: number): string {
-  if (metric === "cpc") {
-    return formatCurrency(value)
-  }
+  if (metric === "cpc") return formatCurrency(value)
   return formatPercent(value)
 }
 
@@ -29,22 +28,14 @@ export function TopCampaignRankingChart({ rows }: TopCampaignRankingChartProps) 
 
     const sorted = [...candidates].sort((left, right) => {
       if (metric === "cpc") {
-        if (left.cpc === right.cpc) {
-          return right.totalCost - left.totalCost
-        }
+        if (left.cpc === right.cpc) return right.totalCost - left.totalCost
         return left.cpc - right.cpc
       }
-
       if (metric === "ctr") {
-        if (left.ctr === right.ctr) {
-          return right.totalCost - left.totalCost
-        }
+        if (left.ctr === right.ctr) return right.totalCost - left.totalCost
         return right.ctr - left.ctr
       }
-
-      if (left.roas === right.roas) {
-        return right.totalCost - left.totalCost
-      }
+      if (left.roas === right.roas) return right.totalCost - left.totalCost
       return right.roas - left.roas
     })
 
@@ -58,15 +49,12 @@ export function TopCampaignRankingChart({ rows }: TopCampaignRankingChartProps) 
     }))
 
     const values = topRows.map((row) => row.value)
-    if (values.length === 0) {
-      return []
-    }
+    if (values.length === 0) return []
 
     if (metric === "cpc") {
       const best = Math.min(...values)
       const worst = Math.max(...values)
       const span = worst - best
-
       return topRows.map((row) => ({
         ...row,
         barPercent: span === 0 ? 100 : ((worst - row.value) / span) * 100,
@@ -86,15 +74,15 @@ export function TopCampaignRankingChart({ rows }: TopCampaignRankingChartProps) 
         <h2>캠페인 랭킹 Top 3</h2>
         <div className="top3-toggle" aria-label="캠페인 랭킹 메트릭 토글">
           {(["roas", "ctr", "cpc"] as RankingMetric[]).map((key) => (
-            <button
+            <Chip
               key={key}
-              type="button"
-              className={metric === key ? "top3-segment active" : "top3-segment"}
+              variant="segment"
+              active={metric === key}
               onClick={() => setMetric(key)}
               aria-pressed={metric === key}
             >
               {METRIC_LABEL[key]}
-            </button>
+            </Chip>
           ))}
         </div>
       </div>

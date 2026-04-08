@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
 import type { CampaignPlatform } from "../../../entities/campaign/model/types"
 import { formatCurrency, formatNumber, formatPercent } from "../../../shared/lib/number"
+import { Chip } from "../../../shared/ui/Chip"
 import {
   DONUT_METRIC_KEYS,
   DONUT_METRIC_LABEL,
@@ -24,9 +25,7 @@ interface PlatformPerformanceDonutProps {
 }
 
 function formatMetricValue(metric: DonutMetric, value: number): string {
-  if (metric === "cost") {
-    return formatCurrency(value)
-  }
+  if (metric === "cost") return formatCurrency(value)
   return formatNumber(value)
 }
 
@@ -39,16 +38,10 @@ export function PlatformPerformanceDonut({
 
   const chartData = useMemo(() => {
     const total = data.reduce((sum, item) => sum + item[metric], 0)
-
     return data.map((item) => {
       const value = item[metric]
       const ratio = total > 0 ? (value / total) * 100 : 0
-
-      return {
-        ...item,
-        value,
-        ratio,
-      }
+      return { ...item, value, ratio }
     })
   }, [data, metric])
 
@@ -60,15 +53,14 @@ export function PlatformPerformanceDonut({
         <h2>플랫폼별 성과</h2>
         <div className="chip-group" aria-label="플랫폼별 성과 메트릭 토글">
           {DONUT_METRIC_KEYS.map((key) => (
-            <button
+            <Chip
               key={key}
-              type="button"
-              className={metric === key ? "chip active" : "chip"}
+              active={metric === key}
               onClick={() => setMetric(key)}
               aria-pressed={metric === key}
             >
               {DONUT_METRIC_LABEL[key]}
-            </button>
+            </Chip>
           ))}
         </div>
       </div>
@@ -89,15 +81,9 @@ export function PlatformPerformanceDonut({
                   paddingAngle={2}
                   rootTabIndex={-1}
                   onClick={(_, index) => {
-                    if (typeof index !== "number") {
-                      return
-                    }
-
+                    if (typeof index !== "number") return
                     const target = chartData[index]
-                    if (!target) {
-                      return
-                    }
-
+                    if (!target) return
                     onTogglePlatform(target.platform)
                   }}
                 >
@@ -116,12 +102,7 @@ export function PlatformPerformanceDonut({
                   })}
                 </Pie>
                 <Tooltip
-                  contentStyle={{
-                    background: "#0f1526",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    borderRadius: 10,
-                    fontSize: 13,
-                  }}
+                  contentStyle={{ background: "#0f1526", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, fontSize: 13 }}
                   labelStyle={{ color: "#94a3b8" }}
                   itemStyle={{ color: "#e2e8f0" }}
                   formatter={(value) => {

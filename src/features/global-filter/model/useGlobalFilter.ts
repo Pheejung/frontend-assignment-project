@@ -1,5 +1,5 @@
 import { useShallow } from "zustand/react/shallow"
-import { useDashboardStore } from "../../features/global-filter/model/store"
+import { useDashboardStore } from "./store"
 
 export function useGlobalFilter() {
   return useDashboardStore(

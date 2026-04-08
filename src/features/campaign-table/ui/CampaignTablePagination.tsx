@@ -1,3 +1,5 @@
+import { Button } from "../../../shared/ui/Button"
+
 interface CampaignTablePaginationProps {
   page: number
   totalPages: number
@@ -8,15 +10,15 @@ interface CampaignTablePaginationProps {
 export function CampaignTablePagination({ page, totalPages, onPrev, onNext }: CampaignTablePaginationProps) {
   return (
     <div className="pagination">
-      <button type="button" onClick={onPrev} disabled={page === 1}>
+      <Button type="button" onClick={onPrev} disabled={page === 1}>
         이전
-      </button>
+      </Button>
       <span>
         {page} / {totalPages}
       </span>
-      <button type="button" onClick={onNext} disabled={page === totalPages}>
+      <Button type="button" onClick={onNext} disabled={page === totalPages}>
         다음
-      </button>
+      </Button>
     </div>
   )
 }

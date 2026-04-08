@@ -1,10 +1,11 @@
 import { useMemo } from "react"
-import type { Campaign } from "../../entities/campaign/model/types"
-import type { DailyStat } from "../../entities/daily-stat/model/types"
-import type { CampaignPlatform } from "../../entities/campaign/model/types"
-import { useDashboardStore } from "../../features/global-filter/model/store"
-import { filterCampaigns, filterDailyStats } from "../../shared/lib/filter"
-import type { PlatformPerformanceDatum } from "../../widgets/platform-performance-donut/ui/PlatformPerformanceDonut"
+import type { Campaign } from "../../../entities/campaign/model/types"
+import type { DailyStat } from "../../../entities/daily-stat/model/types"
+import type { CampaignPlatform } from "../../../entities/campaign/model/types"
+import { useDashboardStore } from "../../../features/global-filter/model/store"
+import { filterCampaigns } from "../../../entities/campaign/lib/filter"
+import { filterDailyStats } from "../../../entities/daily-stat/lib/filter"
+import type { PlatformPerformanceDatum } from "../ui/PlatformPerformanceDonut"
 
 const ALL_PLATFORMS: CampaignPlatform[] = ["Google", "Meta", "Naver"]
 

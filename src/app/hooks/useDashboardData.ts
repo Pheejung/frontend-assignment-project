@@ -9,9 +9,10 @@ import {
   aggregateByDate,
   aggregateTotals,
   createEmptyTotals,
-} from "../../shared/lib/aggregate"
+} from "../../entities/daily-stat/lib/aggregate"
 import type { DateRange } from "../../shared/lib/date"
-import { filterCampaigns, filterDailyStats } from "../../shared/lib/filter"
+import { filterCampaigns } from "../../entities/campaign/lib/filter"
+import { filterDailyStats } from "../../entities/daily-stat/lib/filter"
 import { calculateDerivedMetrics } from "../../shared/lib/metrics"
 
 export interface QueryMeta {

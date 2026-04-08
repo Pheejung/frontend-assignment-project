@@ -1,6 +1,6 @@
-import { normalizeDailyStats } from '../../entities/daily-stat/lib/normalize'
-import type { DailyStat, DailyStatApi } from '../../entities/daily-stat/model/types'
-import { fetchJson } from './client'
+import { normalizeDailyStats } from '../lib/normalize'
+import type { DailyStat, DailyStatApi } from '../model/types'
+import { fetchJson } from '../../../shared/api/client'
 
 export interface DailyStatsQueryData {
   dailyStats: DailyStat[]

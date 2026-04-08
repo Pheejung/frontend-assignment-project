@@ -1,6 +1,5 @@
-import type { Campaign, CampaignPlatform, CampaignStatus } from '../../entities/campaign/model/types'
-import type { DailyStat } from '../../entities/daily-stat/model/types'
-import { type DateRange, doesDateRangeOverlap, isDateWithinRange } from './date'
+import type { Campaign, CampaignPlatform, CampaignStatus } from '../model/types'
+import { type DateRange, doesDateRangeOverlap } from '../../../shared/lib/date'
 
 export interface GlobalFilters {
   dateRange: DateRange
@@ -30,19 +29,5 @@ export function filterCampaigns(
     }
 
     return doesDateRangeOverlap(campaignRange, filters.dateRange)
-  })
-}
-
-export function filterDailyStats(
-  dailyStats: DailyStat[],
-  campaignIds: Set<string>,
-  dateRange: DateRange,
-): DailyStat[] {
-  return dailyStats.filter((stat) => {
-    if (!campaignIds.has(stat.campaignId)) {
-      return false
-    }
-
-    return isDateWithinRange(stat.date, dateRange)
   })
 }

@@ -9,8 +9,9 @@ import {
   YAxis,
 } from 'recharts'
 import type { TrendMetric } from '../../../features/global-filter/model/store'
-import type { DailySeriesPoint } from '../../../shared/lib/aggregate'
+import type { DailySeriesPoint } from '../../../entities/daily-stat/lib/aggregate'
 import { formatNumber } from '../../../shared/lib/number'
+import { Chip } from '../../../shared/ui/Chip'
 
 interface DailyTrendChartProps {
   data: DailySeriesPoint[]
@@ -18,27 +19,12 @@ interface DailyTrendChartProps {
   onToggleMetric: (metric: TrendMetric) => void
 }
 
-const metricConfig: Record<
-  TrendMetric,
-  { label: string; color: string; dataKey: TrendMetric }
-> = {
-  impressions: {
-    label: '노출수',
-    color: '#818cf8',
-    dataKey: 'impressions',
-  },
-  clicks: {
-    label: '클릭수',
-    color: '#34d399',
-    dataKey: 'clicks',
-  },
+const metricConfig: Record<TrendMetric, { label: string; color: string; dataKey: TrendMetric }> = {
+  impressions: { label: '노출수', color: '#818cf8', dataKey: 'impressions' },
+  clicks: { label: '클릭수', color: '#34d399', dataKey: 'clicks' },
 }
 
-export function DailyTrendChart({
-  data,
-  selectedMetrics,
-  onToggleMetric,
-}: DailyTrendChartProps) {
+export function DailyTrendChart({ data, selectedMetrics, onToggleMetric }: DailyTrendChartProps) {
   return (
     <section className="card">
       <div className="chart-header">
@@ -46,20 +32,17 @@ export function DailyTrendChart({
         <div className="chip-group" aria-label="일별 추이 메트릭 토글">
           {(['impressions', 'clicks'] as TrendMetric[]).map((metric) => {
             const isActive = selectedMetrics.includes(metric)
-            const isOnlyOneSelected =
-              isActive && selectedMetrics.length === 1
-
+            const isOnlyOneSelected = isActive && selectedMetrics.length === 1
             return (
-              <button
+              <Chip
                 key={metric}
-                type="button"
-                className={isActive ? 'chip active' : 'chip'}
-                onClick={() => onToggleMetric(metric)}
+                active={isActive}
                 disabled={isOnlyOneSelected}
+                onClick={() => onToggleMetric(metric)}
                 aria-pressed={isActive}
               >
                 {metricConfig[metric].label}
-              </button>
+              </Chip>
             )
           })}
         </div>
@@ -88,7 +71,6 @@ export function DailyTrendChart({
                 }}
               />
               <Legend wrapperStyle={{ fontSize: 13, color: '#94a3b8' }} />
-
               {selectedMetrics.map((metric) => (
                 <Line
                   key={metric}

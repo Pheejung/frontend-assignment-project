@@ -4,12 +4,16 @@ import { formatCurrency, formatPercent } from "../../../shared/lib/number"
 import { formatPeriod } from "../lib/tableUtils"
 import { useCampaignTableState } from "../model/useCampaignTableState"
 import type { CampaignTableRowData, SortKey } from "../model/types"
+import { Badge } from "../../../shared/ui/Badge"
+import { Button } from "../../../shared/ui/Button"
+import { Input } from "../../../shared/ui/Input"
 import { CampaignTablePagination } from "./CampaignTablePagination"
 import { CampaignTableToolbar } from "./CampaignTableToolbar"
 
 interface CampaignManagementTableProps {
   rows: CampaignTableRowData[]
   onBulkStatusChange: (campaignIds: string[], status: CampaignStatus) => void
+  onNotice: (message: string) => void
 }
 
 const STATUS_LABEL: Record<CampaignStatus, string> = {
@@ -18,7 +22,7 @@ const STATUS_LABEL: Record<CampaignStatus, string> = {
   ended: "종료",
 }
 
-export function CampaignManagementTable({ rows, onBulkStatusChange }: CampaignManagementTableProps) {
+export function CampaignManagementTable({ rows, onBulkStatusChange, onNotice }: CampaignManagementTableProps) {
   const {
     searchInput,
     setSearchInput,
@@ -55,23 +59,20 @@ export function CampaignManagementTable({ rows, onBulkStatusChange }: CampaignMa
       })
       return
     }
-
     setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)))
   }
 
   function applyBulkStatusChange() {
-    if (selectedIds.length === 0) {
-      return
-    }
-
+    if (selectedIds.length === 0) return
+    const count = selectedIds.length
     onBulkStatusChange(selectedIds, bulkStatus)
     setSelectedIds([])
+    onNotice(`${count}개 캠페인의 상태가 변경되었습니다.`)
   }
 
   function renderSortBadge(key: SortKey) {
     const direction = getSortDirection(key)
     if (!direction) return ""
-
     const priority = getSortPriority(key)
     const arrow = direction === "asc" ? "▲" : "▼"
     return `${arrow}${priority ?? ""}`
@@ -80,7 +81,12 @@ export function CampaignManagementTable({ rows, onBulkStatusChange }: CampaignMa
   return (
     <section className="card">
       <div className="table-header">
-        <h2>캠페인 관리 테이블</h2>
+        <div className="table-title-group">
+          <h2>캠페인 관리 테이블</h2>
+          {selectedIds.length > 0 && (
+            <Badge>{selectedIds.length}개 선택됨</Badge>
+          )}
+        </div>
         <CampaignTableToolbar
           searchInput={searchInput}
           onSearchInputChange={setSearchInput}
@@ -91,17 +97,17 @@ export function CampaignManagementTable({ rows, onBulkStatusChange }: CampaignMa
         />
       </div>
 
-      <p className="muted table-count">검색 결과 {searchedRows.length}건 / 전체 {rows.length}건</p>
+      <p className="muted table-count">검색 결과 {searchedRows.length}건 / 필터 내 전체 {rows.length}건</p>
 
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
               <th>
-                <input
+                <Input
                   type="checkbox"
                   checked={isPageAllSelected}
-                  onChange={(event) => togglePageSelection(event.target.checked)}
+                  onChange={(e) => togglePageSelection(e.target.checked)}
                   aria-label="현재 페이지 전체 선택"
                 />
               </th>
@@ -109,29 +115,29 @@ export function CampaignManagementTable({ rows, onBulkStatusChange }: CampaignMa
               <th>상태</th>
               <th>매체</th>
               <th>
-                <button type="button" className="table-sort" onClick={() => toggleSort("period")}>
+                <Button variant="table-sort" onClick={() => toggleSort("period")}>
                   집행기간 {renderSortBadge("period")}
-                </button>
+                </Button>
               </th>
               <th>
-                <button type="button" className="table-sort" onClick={() => toggleSort("totalCost")}>
+                <Button variant="table-sort" onClick={() => toggleSort("totalCost")}>
                   총 집행금액 {renderSortBadge("totalCost")}
-                </button>
+                </Button>
               </th>
               <th>
-                <button type="button" className="table-sort" onClick={() => toggleSort("ctr")}>
+                <Button variant="table-sort" onClick={() => toggleSort("ctr")}>
                   CTR {renderSortBadge("ctr")}
-                </button>
+                </Button>
               </th>
               <th>
-                <button type="button" className="table-sort" onClick={() => toggleSort("cpc")}>
+                <Button variant="table-sort" onClick={() => toggleSort("cpc")}>
                   CPC {renderSortBadge("cpc")}
-                </button>
+                </Button>
               </th>
               <th>
-                <button type="button" className="table-sort" onClick={() => toggleSort("roas")}>
+                <Button variant="table-sort" onClick={() => toggleSort("roas")}>
                   ROAS {renderSortBadge("roas")}
-                </button>
+                </Button>
               </th>
             </tr>
           </thead>
@@ -146,7 +152,7 @@ export function CampaignManagementTable({ rows, onBulkStatusChange }: CampaignMa
               pagedRows.map((row) => (
                 <tr key={row.id}>
                   <td>
-                    <input
+                    <Input
                       type="checkbox"
                       checked={selectedIds.includes(row.id)}
                       onChange={() => toggleRowSelection(row.id)}

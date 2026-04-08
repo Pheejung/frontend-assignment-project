@@ -1,5 +1,8 @@
-import type { CampaignPlatform, CampaignStatus } from "../../entities/campaign/model/types"
-import type { DateRange } from "../../shared/lib/date"
+import type { CampaignPlatform, CampaignStatus } from "../../../entities/campaign/model/types"
+import { Button } from "../../../shared/ui/Button"
+import { Chip } from "../../../shared/ui/Chip"
+import { Input } from "../../../shared/ui/Input"
+import type { DateRange } from "../../../shared/lib/date"
 
 const STATUS_LABEL: Record<CampaignStatus, string> = {
   active: "진행중",
@@ -38,20 +41,29 @@ export function GlobalFilterBar({
         <div className="filter-group period-group">
           <span className="group-label">집행기간</span>
           <label className="date-pill">
-            <input
+            <Input
               type="date"
               aria-label="집행 시작일"
               value={dateRange.from}
-              onChange={(e) => onDateRangeChange({ from: e.target.value, to: dateRange.to })}
+              onChange={(e) => {
+                const from = e.target.value
+                const to = from > dateRange.to ? from : dateRange.to
+                onDateRangeChange({ from, to })
+              }}
             />
           </label>
           <span className="range-separator">~</span>
           <label className="date-pill">
-            <input
+            <Input
               type="date"
               aria-label="집행 종료일"
               value={dateRange.to}
-              onChange={(e) => onDateRangeChange({ from: dateRange.from, to: e.target.value })}
+              min={dateRange.from}
+              onChange={(e) => {
+                const to = e.target.value
+                const from = to < dateRange.from ? to : dateRange.from
+                onDateRangeChange({ from, to })
+              }}
             />
           </label>
         </div>
@@ -63,12 +75,10 @@ export function GlobalFilterBar({
           <div className="chip-group compact">
             {statusOptions.map((status) => {
               const isActive = statuses.includes(status)
-
               return (
-                <button
+                <Chip
                   key={status}
-                  type="button"
-                  className={isActive ? "chip active" : "chip"}
+                  active={isActive}
                   aria-pressed={isActive}
                   onClick={() => {
                     if (isActive && statuses.length === 1) {
@@ -79,7 +89,7 @@ export function GlobalFilterBar({
                   }}
                 >
                   {STATUS_LABEL[status]}
-                </button>
+                </Chip>
               )
             })}
           </div>
@@ -92,12 +102,10 @@ export function GlobalFilterBar({
           <div className="chip-group compact">
             {platformOptions.map((platform) => {
               const isActive = platforms.includes(platform)
-
               return (
-                <button
+                <Chip
                   key={platform}
-                  type="button"
-                  className={isActive ? "chip active" : "chip"}
+                  active={isActive}
                   aria-pressed={isActive}
                   onClick={() => {
                     if (isActive && platforms.length === 1) {
@@ -108,7 +116,7 @@ export function GlobalFilterBar({
                   }}
                 >
                   {platform}
-                </button>
+                </Chip>
               )
             })}
           </div>
@@ -116,9 +124,9 @@ export function GlobalFilterBar({
 
         <span className="toolbar-divider" aria-hidden="true" />
 
-        <button type="button" className="secondary reset-inline" onClick={onReset} aria-label="필터 초기화">
+        <Button variant="secondary" className="reset-inline" onClick={onReset} aria-label="필터 초기화">
           초기화
-        </button>
+        </Button>
       </div>
     </section>
   )

@@ -1,5 +1,5 @@
-import type { DailyStat } from '../../entities/daily-stat/model/types'
-import type { MetricInput } from './metrics'
+import type { DailyStat } from '../model/types'
+import type { MetricInput } from '../../../shared/lib/metrics'
 
 export type StatTotals = MetricInput
 
