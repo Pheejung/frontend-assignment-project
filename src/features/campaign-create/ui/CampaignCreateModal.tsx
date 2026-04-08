@@ -14,6 +14,7 @@ import { Select } from "../../../shared/ui/Select"
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+const EMPTY_NUMBER = Number.NaN
 
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
   return [...container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter((element) => {
@@ -56,8 +57,8 @@ export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateM
     defaultValues: {
       name: "",
       platform: "Google",
-      budget: undefined,
-      initialSpend: undefined,
+      budget: EMPTY_NUMBER,
+      initialSpend: EMPTY_NUMBER,
       startDate: todayStr,
       endDate: weekLaterStr,
     },
@@ -70,8 +71,8 @@ export function CampaignCreateModal({ open, onClose, onSubmit }: CampaignCreateM
       reset({
         name: "",
         platform: "Google",
-        budget: undefined,
-        initialSpend: undefined,
+        budget: EMPTY_NUMBER,
+        initialSpend: EMPTY_NUMBER,
         startDate: todayStr,
         endDate: weekLaterStr,
       })

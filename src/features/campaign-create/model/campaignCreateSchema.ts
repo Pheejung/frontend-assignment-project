@@ -30,8 +30,8 @@ export const campaignCreateSchema = z
     message: "집행 금액은 예산을 초과할 수 없습니다.",
     path: ["initialSpend"],
   })
-  .refine((data) => data.startDate.length === 0 || data.endDate.length === 0 || data.endDate >= data.startDate, {
-    message: "종료일은 시작일과 같거나 이후여야 합니다.",
+  .refine((data) => data.startDate.length === 0 || data.endDate.length === 0 || data.endDate > data.startDate, {
+    message: "종료일은 시작일보다 이후여야 합니다.",
     path: ["endDate"],
   })
 

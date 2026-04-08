@@ -73,6 +73,7 @@ export default function DashboardApp() {
     };
     addLocalCampaign(newCampaign, payload.initialSpend);
     setIsCreateModalOpen(false);
+    showFilterNotice(`"${payload.name}" 캠페인이 등록되었습니다.`);
   }
 
   if (queryMeta.isLoading) {

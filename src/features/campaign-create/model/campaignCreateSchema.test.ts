@@ -76,9 +76,9 @@ describe('campaignCreateSchema', () => {
       expect(result.success).toBe(false)
     })
 
-    it('accepts endDate equal to startDate (same-day campaign)', () => {
+    it('rejects endDate equal to startDate (same-day campaign)', () => {
       const result = campaignCreateSchema.safeParse(valid({ startDate: '2026-03-10', endDate: '2026-03-10' }))
-      expect(result.success).toBe(true)
+      expect(result.success).toBe(false)
     })
 
     it('rejects empty startDate', () => {

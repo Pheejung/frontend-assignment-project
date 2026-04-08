@@ -93,4 +93,33 @@ describe('CampaignCreateModal accessibility', () => {
       expect(trigger).toHaveFocus()
     })
   })
+
+  it('resets form values when modal is reopened', async () => {
+    const onClose = vi.fn()
+
+    const { rerender } = render(
+      <CampaignCreateModal open onClose={onClose} onSubmit={() => undefined} />,
+    )
+
+    const nameInput = screen.getByPlaceholderText('캠페인명을 입력하세요') as HTMLInputElement
+    const budgetInput = screen.getByPlaceholderText('100 ~ 1,000,000,000') as HTMLInputElement
+    const spendInput = screen.getByPlaceholderText('0 ~ 1,000,000,000') as HTMLInputElement
+
+    fireEvent.change(nameInput, { target: { value: '임시 캠페인' } })
+    fireEvent.change(budgetInput, { target: { value: '12345' } })
+    fireEvent.change(spendInput, { target: { value: '6789' } })
+
+    expect(nameInput.value).toBe('임시 캠페인')
+    expect(budgetInput.value).toBe('12345')
+    expect(spendInput.value).toBe('6789')
+
+    rerender(<CampaignCreateModal open={false} onClose={onClose} onSubmit={() => undefined} />)
+    rerender(<CampaignCreateModal open onClose={onClose} onSubmit={() => undefined} />)
+
+    await waitFor(() => {
+      expect((screen.getByPlaceholderText('캠페인명을 입력하세요') as HTMLInputElement).value).toBe('')
+      expect((screen.getByPlaceholderText('100 ~ 1,000,000,000') as HTMLInputElement).value).toBe('')
+      expect((screen.getByPlaceholderText('0 ~ 1,000,000,000') as HTMLInputElement).value).toBe('')
+    })
+  })
 })

@@ -9,18 +9,17 @@ import type { PlatformPerformanceDatum } from "../ui/PlatformPerformanceDonut"
 
 const ALL_PLATFORMS: CampaignPlatform[] = ["Google", "Meta", "Naver"]
 
-// 도넛 차트는 platform 필터를 무시하고 전체 플랫폼을 표시해야
-// 세그먼트 클릭으로 글로벌 필터를 토글하는 양방향 연동이 가능하다.
 export function usePlatformPerformanceData(
   mergedCampaigns: Campaign[],
   mergedDailyStats: DailyStat[],
 ): PlatformPerformanceDatum[] {
   const dateRange = useDashboardStore((state) => state.dateRange)
   const statuses = useDashboardStore((state) => state.statuses)
+  const platforms = useDashboardStore((state) => state.platforms)
 
   const campaignsForDonut = useMemo(
-    () => filterCampaigns(mergedCampaigns, { dateRange, statuses, platforms: ALL_PLATFORMS }),
-    [mergedCampaigns, dateRange, statuses],
+    () => filterCampaigns(mergedCampaigns, { dateRange, statuses, platforms }),
+    [mergedCampaigns, dateRange, statuses, platforms],
   )
 
   const campaignIdsForDonut = useMemo(
