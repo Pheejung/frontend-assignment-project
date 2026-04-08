@@ -1,4 +1,4 @@
-# data.json 기반 데이터 정규화/예외처리 가이드
+# db.json 기반 데이터 정규화/예외처리 가이드
 
 ## 1. 왜 별도 정규화가 필요한가
 제공 데이터에는 실무형 노이즈가 포함되어 있습니다. 이 단계 없이 바로 렌더링하면 필터/정렬/지표 계산에서 오류가 납니다.
@@ -80,12 +80,17 @@ const roas = cost > 0 ? (conversionsValue / cost) * 100 : 0;
 
 ---
 
-## 5. 구현 위치 제안
+## 5. 구현 위치 제안 (현재 FSD 구조 기준)
 
-- `src/shared/lib/normalize/campaign.ts`
-- `src/shared/lib/normalize/dailyStat.ts`
+- `src/entities/campaign/api/campaigns.ts` (fetch + normalize 연결)
+- `src/entities/campaign/lib/normalize.ts`
+- `src/entities/campaign/lib/filter.ts`
+- `src/entities/daily-stat/api/dailyStats.ts` (fetch + normalize 연결)
+- `src/entities/daily-stat/lib/normalize.ts`
+- `src/entities/daily-stat/lib/filter.ts`
+- `src/entities/daily-stat/lib/aggregate.ts`
 - `src/shared/lib/metrics.ts`
-- `src/shared/lib/aggregate.ts`
+- `src/shared/lib/number.ts` (숫자 파싱/포맷 공통 함수)
 
 파이프라인:
 1. API fetch
@@ -108,10 +113,9 @@ const roas = cost > 0 ? (conversionsValue / cost) * 100 : 0;
 
 ## 7. 빠른 체크리스트
 
-- [ ] status/platform 매핑 함수 적용
-- [ ] 숫자 문자열 파서 적용 (`원` 제거)
-- [ ] 날짜 strict 파싱 + 비정상 row 처리
-- [ ] daily_stats 중복 키 처리
-- [ ] CTR/CPC/ROAS 분모 0 방어
-- [ ] 테이블/차트 동일 normalize 결과 사용
-
+- [x] status/platform 매핑 함수 적용
+- [x] 숫자 문자열 파서 적용 (`원` 제거)
+- [x] 날짜 strict 파싱 + 비정상 row 처리
+- [x] daily_stats 중복 키 처리
+- [x] CTR/CPC/ROAS 분모 0 방어
+- [x] 테이블/차트 동일 normalize 결과 사용

@@ -58,25 +58,26 @@ flowchart LR
 - `useCampaignsQuery()`
 - `useDailyStatsQuery()`
 
-## 4.2 클라이언트 상태 (Zustand)
-- 글로벌 필터: `dateRange`, `statuses`, `platforms`
-  - `dateRange` 초기값: 당월 1일~말일
-  - `statuses` 초기값: 전체(`active`, `paused`, `ended`)
-  - `platforms` 초기값: 전체(`Google`, `Meta`, `Naver`)
-- 차트 토글: `trendMetrics`, `platformMetric`, `rankingMetric`
-  - `trendMetrics` 초기값: `impressions + clicks` 활성
-  - `platformMetric` 초기값: `cost`
-  - `rankingMetric` 초기값: `roas`
-- 테이블 상태: `search`, `sort`, `page`, `selectedIds`
-  - `page` 초기값: 1
-  - `pageSize`: 10 (고정)
-- 모달 상태: `isCreateModalOpen`
-- 로컬 추가 데이터: `localCampaigns`, `localDailyStats`
+## 4.2 클라이언트 상태 (Zustand + 컴포넌트 로컬 상태)
+- 전역 스토어(Zustand)
+  - 글로벌 필터: `dateRange`, `statuses`, `platforms`
+    - `dateRange` 초기값: 당월 1일~말일
+    - `statuses` 초기값: 전체(`active`, `paused`, `ended`)
+    - `platforms` 초기값: 전체(`Google`, `Meta`, `Naver`)
+  - 일별 추이 차트 토글: `trendMetrics`
+    - 초기값: `impressions + clicks` 활성
+  - 로컬 반영 데이터: `localCampaigns`, `statusOverrides`, `spendOverrides`
+- 컴포넌트 로컬 상태(useState/useForm)
+  - 도넛 메트릭(`cost/impressions/clicks/conversions`)
+  - Top3 메트릭(`roas/ctr/cpc`)
+  - 테이블 UI 상태(`search`, `sort`, `page`, `selectedIds`, `bulkStatus`)
+  - 모달 open/close 및 폼 상태
 
 ## 5. 요구사항 매핑
 ### 5.1 글로벌 필터
 - 모든 위젯은 `filteredCampaignIds`를 공통 입력으로 사용
 - AND 조건 결합
+- 기간 해석 기준: **겹침(overlap)** 적용 (`campaign.startDate <= filter.to && filter.from <= campaign.endDate`)
 - 초기화 버튼으로 초기 상태 복원
 - 기간/상태/매체 변경 시 차트와 테이블이 동일 시점에 동기화
 - 상태/매체는 다중 선택 지원
@@ -102,14 +103,14 @@ flowchart LR
 ### 5.4 캠페인 등록 모달
 - 검증 실패 시 필드 하단 메시지
 - 성공 시 로컬 상태 반영으로 즉시 UI 동기화
-- `status=active`, `id=uuid` 자동 설정
+- `status=active`, `id` 고유값 자동 설정
 - 입력 필드:
   - 캠페인명: 2~100자
   - 광고 매체: Google/Meta/Naver 중 1개
   - 예산: 정수, 100~1,000,000,000
   - 집행 금액: 정수, 0~1,000,000,000, 예산 초과 불가
   - 시작일: 필수
-  - 종료일: 시작일 이후
+  - 종료일: 시작일 이후 (같은 날 불가)
 - 신규 캠페인에 `daily_stats`가 없으면 지표는 0 또는 `-` 표기 허용
 
 ### 5.5 선택 과제
